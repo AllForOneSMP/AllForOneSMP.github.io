@@ -642,8 +642,7 @@
                 if (window.applyBanner) window.applyBanner(window._currentPath);
             });
         </script>
-
-        <script>
+<script>
                         const BASE = "https://allforonesmp.github.io";
             const ROUTES = {
                 "/": BASE + "/main.html",
@@ -665,6 +664,10 @@
             };
                         const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
                         const EXIT_DURATION = 320; // must be >= slot exit transition time
+
+                        // Only these pages get auto-refreshed every REFRESH_INTERVAL;
+                        // all other pages load once and stay as-is.
+                        const AUTO_REFRESH_PATHS = ["/", "/rules"];
 
                         const shell = document.getElementById("contentShell");
                         const overlay = document.getElementById("rippleOverlay");
@@ -834,8 +837,11 @@
                         }
 
                         // ── Auto-refresh every 2 minutes (paused while tab hidden) ────
+                        // Only runs for pages listed in AUTO_REFRESH_PATHS; every
+                        // other page loads once and is left alone.
                         function startRefreshTimer(path) {
                             if (refreshTimers[path]) clearInterval(refreshTimers[path]);
+                            if (!AUTO_REFRESH_PATHS.includes(path)) return;
                             refreshTimers[path] = setInterval(() => {
                                 if (document.hidden) return; // don't thrash background tabs
                                 const frame = frames[path];
