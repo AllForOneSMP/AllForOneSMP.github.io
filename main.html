@@ -706,6 +706,78 @@
                 text-underline-offset: 2px;
             }
 
+            /* ── APPLICATION FORM DROPDOWN ── */
+            .form-container {
+                background: var(--white);
+                border: 2px solid var(--border-color);
+                border-radius: 14px;
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+            }
+            .form-header {
+                padding: 1rem 1.25rem;
+                background: var(--lighter-blue);
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                user-select: none;
+                transition: background 0.2s;
+            }
+            .form-header:hover {
+                background: var(--light-blue);
+            }
+            .form-header h4 {
+                font-size: 1rem;
+                color: var(--text-dark);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .form-arrow {
+                transition: transform 0.3s;
+                font-size: 0.9rem;
+                color: var(--text-medium);
+                flex-shrink: 0;
+            }
+            .form-container.open .form-arrow {
+                transform: rotate(180deg);
+            }
+            .form-body {
+                display: none;
+                padding: 1rem 1.25rem 1.25rem;
+                border-top: 1px solid var(--border-color);
+            }
+            .form-container.open .form-body {
+                display: block;
+            }
+            .form-body p.form-hint {
+                color: var(--text-medium);
+                font-size: 0.88rem;
+                margin-bottom: 0.9rem;
+            }
+            /* Responsive embed: scales to container width, keeps a sane aspect ratio,
+               and gives the form a comfortable min-height on mobile so fields aren't cramped */
+            .form-embed-wrap {
+                position: relative;
+                width: 100%;
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1px solid var(--border-color);
+                background: var(--lighter-blue);
+            }
+            .form-embed-wrap iframe {
+                display: block;
+                width: 100%;
+                border: none;
+                height: 900px; /* generous default so form fields aren't scroll-cramped on phones */
+            }
+            @media (max-width: 480px) {
+                .form-embed-wrap iframe {
+                    height: 1100px; /* Google Forms stacks fields taller on narrow viewports */
+                }
+            }
+
             .spinner {
                 border: 3px solid var(--light-blue);
                 border-top: 3px solid var(--primary-blue);
@@ -794,6 +866,7 @@
             <section class="join-section">
                 <div class="section-title">Join the Server</div>
 
+
                 <div class="status-pill" id="statusPill">
                     <span class="status-dot" id="statusDot"></span>
                     <span class="status-label" id="statusLabel">Checking…</span>
@@ -877,6 +950,25 @@
                             <h4 id="infoCardTitle">Server Info</h4>
                             <p id="infoCardText"></p>
                         </div>
+
+                        <!-- Application form: collapsible dropdown, responsive embed -->
+                        <div class="form-container" id="formContainer">
+                            <div class="form-header" onclick="toggleForm()">
+                                <h4>Apply / Whitelist Form</h4>
+                                <span class="form-arrow">▼</span>
+                            </div>
+                            <div class="form-body" id="formBody">
+                                <p class="form-hint">Fill out the form below to apply for the server.</p>
+                                <div class="form-embed-wrap">
+                                    <iframe
+                                        src="https://docs.google.com/forms/d/e/1FAIpQLSdToDV3dZWCmU0VDJ27aE5ewpT7za8-VyHP7QvQHqyuXjzPQw/viewform?embedded=true"
+                                        loading="lazy"
+                                        title="AllForOne SMP Application Form">
+                                        Loading…
+                                    </iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -885,7 +977,7 @@
         <footer>
             <p>
                 AllForOne SMP &copy; 2026 &nbsp;|&nbsp;
-                <a href="https://allforonesmp.github.io/rules">Rules</a> &nbsp;|&nbsp; Built with ❤️
+                <a href="https://allforonesmp.github.io/rules">Rules</a> &nbsp;
             </p>
         </footer>
 
@@ -1428,6 +1520,10 @@ const firebaseConfig = {
 
             window.toggleDowntime = function () {
                 document.getElementById("downtimeContainer").classList.toggle("open");
+            };
+
+            window.toggleForm = function () {
+                document.getElementById("formContainer").classList.toggle("open");
             };
 
 // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
