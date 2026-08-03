@@ -9,6 +9,44 @@
         <link
             href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Spectral:wght@700&display=swap"
             rel="stylesheet" />
+
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                }
+                function setStored(v) {
+                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                    var input = document.getElementById("themeToggleInput");
+                    if (input) input.checked = theme === "dark";
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
+                        }
+                    } catch (_) {}
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
+                });
+            })();
+        </script>
+
         <style>
             :root {
                 --primary-blue: #4a90e2;
@@ -29,6 +67,29 @@
                 --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
             }
 
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --warning: #f6c90e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            html {
+                transition: background-color 0.25s ease;
+            }
+
             * {
                 margin: 0;
                 padding: 0;
@@ -41,6 +102,13 @@
                 color: var(--text-dark);
                 min-height: 100vh;
                 line-height: 1.6;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            .mod-card, .login-card, .add-mod-card, .manage-tags-card, .admin-mod-row, footer, .filter-chip,
+            .filter-dropdown, .field input, .field textarea, .btn, .existing-tag-row, .tag-picker,
+            .tag-picker-option {
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             }
 
             h1, h2, h3, h4, h5, h6 {
@@ -254,6 +322,8 @@
                 padding: 0.15rem 0.4rem;
                 width: 110px;
                 font-family: "DM Sans", sans-serif;
+                background: var(--white);
+                color: var(--text-dark);
             }
             .tag-icon-btn {
                 border: none;
@@ -311,6 +381,9 @@
             }
             .btn.danger:hover {
                 background: #fdecea;
+            }
+            :root[data-theme="dark"] .btn.danger:hover {
+                background: #3a1512;
             }
             .btn:disabled {
                 opacity: 0.55;
@@ -506,10 +579,18 @@
                 color: var(--error);
                 border: 1px solid #f5c6c2;
             }
+            :root[data-theme="dark"] .form-msg.error {
+                background: #3a1512;
+                border-color: #6b3530;
+            }
             .form-msg.success {
                 background: #e9f9ef;
                 color: var(--success);
                 border: 1px solid #b7e8c8;
+            }
+            :root[data-theme="dark"] .form-msg.success {
+                background: #10331e;
+                border-color: #1e5c37;
             }
 
             .admin-header {
@@ -613,6 +694,9 @@
                 padding: 2rem;
                 font-size: 0.9rem;
                 margin-top: 2rem;
+            }
+            :root[data-theme="dark"] footer {
+                background: #0d1319;
             }
             footer a {
                 color: var(--accent-blue);
