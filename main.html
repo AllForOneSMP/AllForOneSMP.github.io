@@ -17,10 +17,16 @@
             (function () {
                 var STORAGE_KEY = "afo_theme";
                 function getStored() {
-                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                    try {
+                        return localStorage.getItem(STORAGE_KEY);
+                    } catch (_) {
+                        return null;
+                    }
                 }
                 function setStored(v) {
-                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                    try {
+                        localStorage.setItem(STORAGE_KEY, v);
+                    } catch (_) {}
                 }
                 function apply(theme) {
                     document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
@@ -102,13 +108,32 @@
                 color: var(--text-dark);
                 min-height: 100vh;
                 line-height: 1.6;
-                transition: background-color 0.25s ease, color 0.25s ease;
+                transition:
+                    background-color 0.25s ease,
+                    color 0.25s ease;
+                overflow-x: hidden;
             }
 
-            body, .carousel-wrapper, .card, .status-pill, .agree-gate, .info-card, .form-container,
-            .downtime-container, .fingerprint-box, .fingerprint-value, .connection-id-box,
-            .server-offline-block, .downtime-alert, .rules-link-btn, .downtime-item {
-                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            body,
+            .carousel-wrapper,
+            .card,
+            .status-pill,
+            .agree-gate,
+            .info-card,
+            .form-container,
+            .downtime-container,
+            .fingerprint-box,
+            .fingerprint-value,
+            .connection-id-box,
+            .server-offline-block,
+            .downtime-alert,
+            .rules-link-btn,
+            .downtime-item {
+                transition:
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease,
+                    box-shadow 0.2s ease;
             }
 
             h1,
@@ -383,6 +408,7 @@
                 font-size: 1rem;
                 transition: all 0.2s ease;
                 width: fit-content;
+                max-width: 100%;
             }
             .rules-link-btn:hover {
                 background: var(--light-blue);
@@ -549,6 +575,7 @@
                 display: flex;
                 align-items: center;
                 gap: 0.6rem;
+                flex-wrap: wrap;
             }
             .fingerprint-value {
                 flex: 1;
@@ -622,6 +649,7 @@
                 font-size: 2rem;
                 letter-spacing: 0.12em;
                 color: var(--primary-blue);
+                word-break: break-word;
             }
 
             .join-right {
@@ -646,6 +674,7 @@
                 align-items: center;
                 user-select: none;
                 transition: background 0.2s;
+                gap: 0.75rem;
             }
             .downtime-header:hover {
                 background: var(--light-blue);
@@ -661,6 +690,7 @@
                 transition: transform 0.3s;
                 font-size: 0.9rem;
                 color: var(--text-medium);
+                flex-shrink: 0;
             }
             .downtime-container.open .downtime-arrow {
                 transform: rotate(180deg);
@@ -735,6 +765,8 @@
                 box-shadow: var(--shadow-sm);
                 margin-bottom: 1rem;
                 font-size: 0.95rem;
+                flex-wrap: wrap;
+                max-width: 100%;
             }
             .status-dot {
                 width: 12px;
@@ -762,6 +794,7 @@
             .status-players {
                 color: var(--text-medium);
                 font-size: 0.88rem;
+                word-break: break-word;
             }
 
             /* ── INFO CARD (replaces Voice Chat card) ── */
@@ -795,7 +828,7 @@
                 text-underline-offset: 2px;
             }
 
-            /* ── APPLICATION FORM DROPDOWN ── */
+            /* ── APPLICATION FORM / HOW TO JOIN DROPDOWNS ── */
             .form-container {
                 background: var(--white);
                 border: 2px solid var(--border-color);
@@ -812,6 +845,7 @@
                 align-items: center;
                 user-select: none;
                 transition: background 0.2s;
+                gap: 0.75rem;
             }
             .form-header:hover {
                 background: var(--light-blue);
@@ -859,10 +893,37 @@
                 border: none;
                 height: 900px;
             }
-            @media (max-width: 480px) {
-                .form-embed-wrap iframe {
-                    height: 1100px;
-                }
+
+            /* How To Join steps list */
+            .howto-list {
+                list-style: none;
+                counter-reset: howto;
+                display: flex;
+                flex-direction: column;
+                gap: 0.85rem;
+            }
+            .howto-list li {
+                counter-increment: howto;
+                /* Remove display: flex, align-items, and gap */
+                color: var(--text-medium);
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+
+            .howto-list li::before {
+                content: counter(howto);
+                flex-shrink: 0;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: var(--primary-blue);
+                color: white;
+                font-family: "DM Sans", sans-serif;
+                font-weight: 700;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .spinner {
@@ -896,6 +957,7 @@
                 text-decoration: none;
             }
 
+            /* ── RESPONSIVE / MOBILE ── */
             @media (max-width: 768px) {
                 .join-grid {
                     grid-template-columns: 1fr;
@@ -909,6 +971,68 @@
                 }
                 .section-title {
                     font-size: 1.9rem;
+                }
+                .hero-banner {
+                    max-height: 260px;
+                }
+                .carousel-info {
+                    padding: 1.25rem 1.25rem 1.5rem;
+                }
+                .carousel-info h3 {
+                    font-size: 1.2rem;
+                }
+                .carousel-info p {
+                    font-size: 0.92rem;
+                }
+                .form-embed-wrap iframe {
+                    height: 1100px;
+                }
+                .connection-id-box .code-value {
+                    font-size: 1.5rem;
+                }
+                .status-pill {
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .page-content {
+                    padding: 1rem 0.85rem;
+                }
+                .section-title {
+                    font-size: 1.6rem;
+                    gap: 0.5rem;
+                }
+                .hero-banner {
+                    max-height: 190px;
+                }
+                .carousel-btn {
+                    width: 38px;
+                    height: 38px;
+                    font-size: 1.05rem;
+                }
+                .play-now-btn {
+                    width: 100%;
+                    padding: 0.9rem 1.5rem;
+                    font-size: 1.05rem;
+                }
+                .rules-link-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+                .fingerprint-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .fingerprint-copy-btn {
+                    justify-content: center;
+                }
+                .form-embed-wrap iframe {
+                    height: 1200px;
+                }
+                .downtime-item {
+                    flex-direction: column;
+                    align-items: flex-start;
                 }
             }
         </style>
@@ -956,7 +1080,6 @@
             <section class="join-section">
                 <div class="section-title">Join the Server</div>
 
-
                 <div class="status-pill" id="statusPill">
                     <span class="status-dot" id="statusDot"></span>
                     <span class="status-label" id="statusLabel">Checking…</span>
@@ -992,7 +1115,7 @@
                         </div>
 
                         <div class="agree-gate" id="agreeGate">
-                            <h4>Access the Join Code</h4>
+                            <h4>Access the server I.P</h4>
                             <div class="agree-checkbox-row">
                                 <input type="checkbox" id="agreeCheck" onchange="toggleCodeReveal()" />
                                 <label for="agreeCheck">
@@ -1027,7 +1150,6 @@
                             <h4 id="infoCardTitle">Server Info</h4>
                             <p id="infoCardText"></p>
                         </div>
-
                     </div>
 
                     <div class="join-right">
@@ -1041,11 +1163,9 @@
                             </div>
                         </div>
 
-
-
                         <!-- Application form: collapsible dropdown, responsive embed -->
                         <div class="form-container" id="formContainer">
-                            <div class="form-header" onclick="toggleForm()">
+                            <div class="form-header" onclick="toggleForm('formContainer')">
                                 <h4>Apply / Whitelist Form</h4>
                                 <span class="form-arrow">▼</span>
                             </div>
@@ -1059,6 +1179,55 @@
                                         Loading…
                                     </iframe>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- How To Join: collapsible dropdown with numbered steps -->
+                        <div class="form-container" id="howToJoinContainer">
+                            <div class="form-header" onclick="toggleForm('howToJoinContainer')">
+                                <h4>How To Join</h4>
+                                <span class="form-arrow">▼</span>
+                            </div>
+                            <div class="form-body" id="howToJoinBody">
+                                <h3 style="font-size: 1rem; margin-bottom: 0.85rem">First Steps</h3>
+                                <ol class="howto-list">
+                                    <li>Read and agree to the server rules above.</li>
+                                    <li>
+                                        Download and move
+                                        <a
+                                            href="https://cdn.modrinth.com/data/k68glP2e/versions/19PcQww7/automodpack-mc26.2-fabric-4.0.5.jar?mr_download_reason=standalone&mr_game_version=26.2&mr_loader=fabric"
+                                            >AutoModpack</a
+                                        >
+                                        and
+                                        <a
+                                            href="https://cdn.modrinth.com/data/sCAhKklX/versions/gNSWLB0k/defixus-1.0.5.jar?mr_download_reason=standalone&mr_game_version=26.2&mr_loader=fabric"
+                                            >Defixus Anti-Cheat</a
+                                        >
+                                        into your <b>mods folder</b>
+                                    </li>
+                                    <li>
+                                        Put the server I.P adress into the adress bar in java edition: <b>203.7.6.56</b>
+                                    </li>
+                                    <li>
+                                        Paste in the AutoModpack fingerprint located under Access the server I.P and
+                                        click verify
+                                    </li>
+                                    <li>
+                                        AutoModpack will download all of the mods to your client and then you restart
+                                        minecraft
+                                    </li>
+                                    <li>
+                                        After joining you need to register your account, type
+                                        <b>/register PASSWORD PASWORD</b> E.G: <b>/register soup40 soup40</b> That will
+                                        set your password to soup40.
+                                    </li>
+                                    <li>
+                                        You may also be prompted apon joining with something saying <b>/login</b>, this
+                                        means you type <b>/login PASSWORD</b> E.G: <b>/login soup40</b> This will log
+                                        you into your account. This only tells you to do it if you have not logged in
+                                        within <b>5 hours</b> or if you have <b>switched computers or wifi networks</b>
+                                    </li>
+                                </ol>
                             </div>
                         </div>
                     </div>
@@ -1086,16 +1255,16 @@
             } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
             import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
-  authDomain: "allforonemedia-9a7d8.firebaseapp.com",
-  databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
-  projectId: "allforonemedia-9a7d8",
-  storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
-  messagingSenderId: "892787060584",
-  appId: "1:892787060584:web:e65609062592f9ba96f0dd",
-  measurementId: "G-JSXKLMBRLC"
-};
+            const firebaseConfig = {
+                apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
+                authDomain: "allforonemedia-9a7d8.firebaseapp.com",
+                databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
+                projectId: "allforonemedia-9a7d8",
+                storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
+                messagingSenderId: "892787060584",
+                appId: "1:892787060584:web:e65609062592f9ba96f0dd",
+                measurementId: "G-JSXKLMBRLC"
+            };
 
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -1614,13 +1783,13 @@ const firebaseConfig = {
                 document.getElementById("downtimeContainer").classList.toggle("open");
             };
 
-            window.toggleForm = function () {
-                document.getElementById("formContainer").classList.toggle("open");
+            window.toggleForm = function (containerId) {
+                document.getElementById(containerId).classList.toggle("open");
             };
 
-// ─── LIVE SERVER STATUS PILL ─────────────────────────────────
+            // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
             const STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
-            const STATUS_RECHECK_MS = 2 * 1000;    // re-evaluate staleness every 2s for prompt detection
+            const STATUS_RECHECK_MS = 2 * 1000; // re-evaluate staleness every 2s for prompt detection
             let liveStatusData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
             let statusRecheckInterval = null;
 
