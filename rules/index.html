@@ -11,6 +11,43 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spectral:wght@600;700&display=swap"
             rel="stylesheet" />
 
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                }
+                function setStored(v) {
+                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                    var input = document.getElementById("themeToggleInput");
+                    if (input) input.checked = theme === "dark";
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
+                        }
+                    } catch (_) {}
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
+                });
+            })();
+        </script>
+
         <style>
             :root {
                 --primary-blue: #4a90e2;
@@ -33,6 +70,28 @@
                 --admin-gradient: linear-gradient(135deg, #f6c90e 0%, #ff8c00 100%);
             }
 
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            html {
+                transition: background-color 0.25s ease;
+            }
+
             * {
                 margin: 0;
                 padding: 0;
@@ -45,6 +104,11 @@
                 color: var(--text-dark);
                 min-height: 100vh;
                 line-height: 1.6;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            .search-sticky, .card, .ban-box, .note, footer, mark.search-highlight, .search-dropdown {
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             }
 
             h1, h2, h3, h4, h5, h6 {
@@ -174,6 +238,10 @@
                 padding: 0 2px;
                 font-weight: 700;
             }
+            :root[data-theme="dark"] mark.search-highlight {
+                background: #8a6d00;
+                color: #fff3cd;
+            }
             mark.search-highlight.active {
                 background: #ff9800;
                 color: white;
@@ -213,8 +281,15 @@
                 color: #a5281c;
                 font-size: 1rem;
             }
+            :root[data-theme="dark"] .top-notice {
+                background: linear-gradient(135deg, #3a1512, #431a17);
+                color: #ff9a8c;
+            }
             .top-notice b {
                 color: #c0392b;
+            }
+            :root[data-theme="dark"] .top-notice b {
+                color: #ff6b5b;
             }
 
             .note {
@@ -280,6 +355,11 @@
                 border-radius: 10px;
                 padding: 1.1rem 1.4rem;
             }
+            :root[data-theme="dark"] .ban-box {
+                background: linear-gradient(135deg, #3a1512, #35130f);
+                border-color: #6b3530;
+                border-left-color: var(--error);
+            }
             .ban-box h3 {
                 font-size: 1rem;
                 color: #c0392b;
@@ -296,6 +376,11 @@
             .ban-box b {
                 color: #a5281c;
             }
+            :root[data-theme="dark"] .ban-box h3,
+            :root[data-theme="dark"] .ban-box p,
+            :root[data-theme="dark"] .ban-box b {
+                color: #ff9a8c;
+            }
 
             footer {
                 background: var(--text-dark);
@@ -303,6 +388,9 @@
                 text-align: center;
                 padding: 2rem;
                 font-size: 0.9rem;
+            }
+            :root[data-theme="dark"] footer {
+                background: #0d1319;
             }
             footer a {
                 color: var(--accent-blue);
@@ -375,6 +463,10 @@
                     <li>No bullying, harassment, or targeted negative behavior.</li>
                     <li>Keep chat clean and free from spam or offensive content.</li>
                     <li>Swearing in chat or proximity communication is not permitted.</li>
+                    <li>Do not share players personal info without their permission</li>
+                    <li>Do not impersonate staff or other players</li>
+                    <li>Stick to your Minecraft Account/Offline account. Don't log onto peoples accounts or find out other people's account password unless given permission by the account holder</li>
+                    <li>Keep community events fun, do not disrupt the events</li>
                 </ul>
                 <div class="ban-box">
                     <h3>Punishments</h3>
@@ -389,10 +481,14 @@
                     <li>No stalking or unauthorized access to claimed player bases.</li>
                     <li>Respect farms, chests, and shops; take only when permitted.</li>
                     <li>Griefing and stealing is ONLY allowed if the victim's land is unclaimed.</li>
+                    <li>Do not claim land around other peoples claimed land or prevent players from expanding their base</li>
+                    <li>Land that is claimed and has not recieved any attention for 30 days can be removed and reset</li>
+                    <li>Keep land near player bases clean</li>
+                    <li>Never leaving floating trees, giant holes, or abandoned construction projects in frequently visited areas.</li>
                 </ul>
                 <div class="ban-box">
                     <h3>Punishments</h3>
-                    <p>Violations may result in an <b>IP ban</b>, with severity determined by community feedback.</p>
+                    <p>Violations may result in an <b>IP ban</b>, for around 1 - 5 days</p>
                 </div>
             </div>
 
@@ -405,6 +501,7 @@
                     <li>Maintain communal areas in a safe and orderly manner.</li>
                     <li>Clearly label shared or public constructions.</li>
                     <li>Mark out claimed land with a fence if near spawn. If claimed land is 100+ blocks out from spawn this is not needed.</li>
+                    <li>No builds containing explicit content, or intentionally offensive imagery or swear words are prohibited</li>
                 </ul>
                 <div class="ban-box">
                     <h3>Punishments</h3>
@@ -418,6 +515,7 @@
                     <li>All trades must be transparent and mutually agreed upon.</li>
                     <li>Restock public farms after use.</li>
                     <li>Shops must display accurate pricing.</li>
+                    <li>If payment is accepted for a build or service, make a reasonable effort to complete it or refund the customer.</li>
                 </ul>
                 <div class="ban-box">
                     <h3>Punishments</h3>
@@ -429,11 +527,11 @@
                 <h2 class="section-title">Technical Restrictions</h2>
                 <ul class="rule-list">
                     <li>Use of hacked clients, exploits, or X-ray is prohibited.</li>
-                    <li>Avoid creating lag-inducing machines or excessive redstone circuits.</li>
+                    <li>never creating lag-inducing machines or excessive redstone circuits.</li>
                     <li>Mob farms must be safe for all players nearby.</li>
                     <li>Redstone contraptions <b>must</b> include an accessible off switch.</li>
                     <li>Large farms (50+ blocks) require admin approval; otherwise, they may be removed without restitution.</li>
-                    <li>Avoid dumping large quantities of items on the ground to prevent server lag.</li>
+                    <li>Never dumping large quantities of items on the ground to prevent server lag.</li>
                     <li>Any designs, contraptions, AFK farms, or redstone machines that run more than <b>once</b> every 20 ticks <b>must</b> require admin approval.</li>
                 </ul>
                 <div class="ban-box">
@@ -448,14 +546,33 @@
                     <li>PvP requires explicit agreement between all players involved.</li>
                     <li>No revenge cycles or harassment following combat.</li>
                     <li>No killing intended solely to provoke or annoy other players.</li>
-                    <li>Owners may attack trespassers on their land if the trespasser griefs or steals.</li>
-                    <li>Accidental hits are fine, but if the hit results in the victim dying, or it is repeated, punishments will apply.</li>
+                    <li>Owners may attack trespassers on their land if the trespasser griefs or steals or stays there for more than 1 minute purposely without permission.</li>
+                    <li>Accidental hits are fine, but if the hit results in the victim dying, breaking armour, or it is repeated, punishments will apply.</li>
                 </ul>
                 <div class="ban-box">
                     <h3>Punishments</h3>
                     <p>Violations may result in an <b>IP ban</b>, especially if items are destroyed or a death has occurred.</p>
                 </div>
             </div>
+
+            <div class="card">
+                <h2 class="section-title">Notes</h2>
+                <ul class="rule-list">
+                    <li>Any issues or disputes that happen that the player thinks is unfair can apply for an appeal and will recieve an in game meeting in the court house with other players</li>
+                </ul>
+                <div class="note admin-note">
+                    These rules are subject to change in the future for player and server benefit
+                </div>
+            </div>
+
+            <div class="container">
+            <div class="card">
+
+                  <h2>Hello</h2>
+                </div>
+
+            </div>
+
         </div>
 
         <footer>
