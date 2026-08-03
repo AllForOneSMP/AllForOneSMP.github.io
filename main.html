@@ -3,12 +3,6 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta property="og:title" content="AllForOne SMP" />
-        <meta property="og:description" content="The website for the AllForOne SMP" />
-        <meta property="og:image" content="https://allforonesmp.github.io/images/banner.png" />
-        <meta property="og:url" content="https://allforonesmp.github.io" />
-        <meta name="twitter:card" content="summary_large_image" />
-
         <title>AllForOne SMP | Home</title>
         <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/logo.png" />
 
@@ -17,6 +11,44 @@
         <link
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
+
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                }
+                function setStored(v) {
+                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                    var input = document.getElementById("themeToggleInput");
+                    if (input) input.checked = theme === "dark";
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
+                        }
+                    } catch (_) {}
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
+                });
+            })();
+        </script>
+
         <style>
             :root {
                 --primary-blue: #4a90e2;
@@ -36,6 +68,28 @@
                 --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
             }
 
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            html {
+                transition: background-color 0.25s ease;
+            }
+
             * {
                 margin: 0;
                 padding: 0;
@@ -48,6 +102,13 @@
                 color: var(--text-dark);
                 min-height: 100vh;
                 line-height: 1.6;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            body, .carousel-wrapper, .card, .status-pill, .agree-gate, .info-card, .form-container,
+            .downtime-container, .fingerprint-box, .fingerprint-value, .connection-id-box,
+            .server-offline-block, .downtime-alert, .rules-link-btn, .downtime-item {
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             }
 
             h1,
@@ -405,6 +466,10 @@
                 text-align: center;
                 animation: fadeUp 0.4s ease;
             }
+            :root[data-theme="dark"] .server-offline-block {
+                background: linear-gradient(135deg, #3a3312, #4a3d10);
+                border-color: #7a6414;
+            }
             .server-offline-block.visible {
                 display: block;
             }
@@ -422,6 +487,10 @@
                 font-size: 0.95rem;
                 margin-bottom: 0.75rem;
             }
+            :root[data-theme="dark"] .server-offline-block h4,
+            :root[data-theme="dark"] .server-offline-block p {
+                color: #f6d55c;
+            }
             .offline-countdown {
                 display: inline-block;
                 background: rgba(133, 100, 4, 0.12);
@@ -434,12 +503,18 @@
                 color: #856404;
                 margin-top: 0.25rem;
             }
+            :root[data-theme="dark"] .offline-countdown {
+                color: #f6d55c;
+            }
             .offline-back-at {
                 display: none;
                 margin-top: 0.5rem;
                 font-size: 0.88rem;
                 color: #856404;
                 opacity: 0.8;
+            }
+            :root[data-theme="dark"] .offline-back-at {
+                color: #f6d55c;
             }
             .offline-back-at.visible {
                 display: block;
@@ -626,6 +701,10 @@
                 padding: 1.25rem;
                 animation: fadeUp 0.4s ease;
             }
+            :root[data-theme="dark"] .downtime-alert {
+                background: linear-gradient(135deg, #3a3312, #4a3d10);
+                border-color: #7a6414;
+            }
             .downtime-alert.visible {
                 display: block;
             }
@@ -639,6 +718,10 @@
             .downtime-alert p {
                 color: #856404;
                 font-size: 0.95rem;
+            }
+            :root[data-theme="dark"] .downtime-alert h4,
+            :root[data-theme="dark"] .downtime-alert p {
+                color: #f6d55c;
             }
 
             .status-pill {
@@ -762,8 +845,6 @@
                 font-size: 0.88rem;
                 margin-bottom: 0.9rem;
             }
-            /* Responsive embed: scales to container width, keeps a sane aspect ratio,
-               and gives the form a comfortable min-height on mobile so fields aren't cramped */
             .form-embed-wrap {
                 position: relative;
                 width: 100%;
@@ -776,11 +857,11 @@
                 display: block;
                 width: 100%;
                 border: none;
-                height: 900px; /* generous default so form fields aren't scroll-cramped on phones */
+                height: 900px;
             }
             @media (max-width: 480px) {
                 .form-embed-wrap iframe {
-                    height: 1100px; /* Google Forms stacks fields taller on narrow viewports */
+                    height: 1100px;
                 }
             }
 
@@ -806,6 +887,9 @@
                 padding: 2rem;
                 font-size: 0.9rem;
                 margin-top: 2rem;
+            }
+            :root[data-theme="dark"] footer {
+                background: #0d1319;
             }
             footer a {
                 color: var(--accent-blue);
@@ -871,6 +955,7 @@
 
             <section class="join-section">
                 <div class="section-title">Join the Server</div>
+
 
                 <div class="status-pill" id="statusPill">
                     <span class="status-dot" id="statusDot"></span>
@@ -974,40 +1059,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-container" id="joinContainer">
-                            <div class="form-header" onclick="howtojoin()">
-                                <h4>How to Join AllForOne SMP</h4>
-                                <span class="form-arrow">▼</span>
-                            </div>
-
-                            <div class="form-body" id="joinBody">
-                                <h4 style="margin-bottom: 0.75rem">Before Joining</h4>
-
-                                <ul
-                                    style="
-                                        color: var(--text-medium);
-                                        margin-left: 1.25rem;
-                                        margin-bottom: 1.25rem;
-                                        line-height: 1.8;
-                                    ">
-                                    <li>Read and agree to the server rules.</li>
-                                    <li>Complete the whitelist application form.</li>
-                                    <li>Wait for your application to be reviewed.</li>
-                                    <li>Install the required mods using AutoModpack.</li>
-                                    <li>Join the server using the provided server IP.</li>
-                                </ul>
-
-                                <h4 style="margin-bottom: 0.75rem">Joining Steps</h4>
-
-                                <ol style="color: var(--text-medium); margin-left: 1.25rem; line-height: 1.8">
-                                    <li>Submit your whitelist application.</li>
-                                    <li>Download the modpack when approved.</li>
-                                    <li>Launch Minecraft Java Edition.</li>
-                                    <li>Connect using the server details provided.</li>
-                                    <li>Enjoy playing on AllForOne SMP!</li>
-                                </ol>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1033,16 +1084,16 @@
             } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
             import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
-                authDomain: "allforonemedia-9a7d8.firebaseapp.com",
-                databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
-                projectId: "allforonemedia-9a7d8",
-                storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
-                messagingSenderId: "892787060584",
-                appId: "1:892787060584:web:e65609062592f9ba96f0dd",
-                measurementId: "G-JSXKLMBRLC"
-            };
+const firebaseConfig = {
+  apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
+  authDomain: "allforonemedia-9a7d8.firebaseapp.com",
+  databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
+  projectId: "allforonemedia-9a7d8",
+  storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
+  messagingSenderId: "892787060584",
+  appId: "1:892787060584:web:e65609062592f9ba96f0dd",
+  measurementId: "G-JSXKLMBRLC"
+};
 
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -1565,13 +1616,9 @@
                 document.getElementById("formContainer").classList.toggle("open");
             };
 
-            window.howtojoin = function () {
-                document.getElementById("joinContainer").classList.toggle("open");
-            };
-
-            // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
+// ─── LIVE SERVER STATUS PILL ─────────────────────────────────
             const STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
-            const STATUS_RECHECK_MS = 2 * 1000; // re-evaluate staleness every 2s for prompt detection
+            const STATUS_RECHECK_MS = 2 * 1000;    // re-evaluate staleness every 2s for prompt detection
             let liveStatusData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
             let statusRecheckInterval = null;
 
@@ -1614,7 +1661,7 @@
 
                 const stateMap = {
                     online: { dotClass: "online", text: "Online" },
-                    restarting: { dotClass: "pending", text: "Starting…" },
+                    restarting: { dotClass: "pending", text: "Restarting…" },
                     stopping: { dotClass: "pending", text: "Stopping…" },
                     offline: { dotClass: "offline", text: "Offline" }
                 };
