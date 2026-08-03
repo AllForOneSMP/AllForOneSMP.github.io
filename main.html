@@ -3,6 +3,12 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta property="og:title" content="AllForOne SMP" />
+        <meta property="og:description" content="The website for the AllForOne SMP" />
+        <meta property="og:image" content="https://allforonesmp.github.io/images/banner.png" />
+        <meta property="og:url" content="https://allforonesmp.github.io" />
+        <meta name="twitter:card" content="summary_large_image" />
+
         <title>AllForOne SMP | Home</title>
         <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/logo.png" />
 
@@ -866,7 +872,6 @@
             <section class="join-section">
                 <div class="section-title">Join the Server</div>
 
-
                 <div class="status-pill" id="statusPill">
                     <span class="status-dot" id="statusDot"></span>
                     <span class="status-label" id="statusLabel">Checking…</span>
@@ -969,6 +974,40 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-container" id="joinContainer">
+                            <div class="form-header" onclick="howtojoin()">
+                                <h4>How to Join AllForOne SMP</h4>
+                                <span class="form-arrow">▼</span>
+                            </div>
+
+                            <div class="form-body" id="joinBody">
+                                <h4 style="margin-bottom: 0.75rem">Before Joining</h4>
+
+                                <ul
+                                    style="
+                                        color: var(--text-medium);
+                                        margin-left: 1.25rem;
+                                        margin-bottom: 1.25rem;
+                                        line-height: 1.8;
+                                    ">
+                                    <li>Read and agree to the server rules.</li>
+                                    <li>Complete the whitelist application form.</li>
+                                    <li>Wait for your application to be reviewed.</li>
+                                    <li>Install the required mods using AutoModpack.</li>
+                                    <li>Join the server using the provided server IP.</li>
+                                </ul>
+
+                                <h4 style="margin-bottom: 0.75rem">Joining Steps</h4>
+
+                                <ol style="color: var(--text-medium); margin-left: 1.25rem; line-height: 1.8">
+                                    <li>Submit your whitelist application.</li>
+                                    <li>Download the modpack when approved.</li>
+                                    <li>Launch Minecraft Java Edition.</li>
+                                    <li>Connect using the server details provided.</li>
+                                    <li>Enjoy playing on AllForOne SMP!</li>
+                                </ol>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -994,16 +1033,16 @@
             } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
             import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
-  authDomain: "allforonemedia-9a7d8.firebaseapp.com",
-  databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
-  projectId: "allforonemedia-9a7d8",
-  storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
-  messagingSenderId: "892787060584",
-  appId: "1:892787060584:web:e65609062592f9ba96f0dd",
-  measurementId: "G-JSXKLMBRLC"
-};
+            const firebaseConfig = {
+                apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
+                authDomain: "allforonemedia-9a7d8.firebaseapp.com",
+                databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
+                projectId: "allforonemedia-9a7d8",
+                storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
+                messagingSenderId: "892787060584",
+                appId: "1:892787060584:web:e65609062592f9ba96f0dd",
+                measurementId: "G-JSXKLMBRLC"
+            };
 
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -1526,9 +1565,13 @@ const firebaseConfig = {
                 document.getElementById("formContainer").classList.toggle("open");
             };
 
-// ─── LIVE SERVER STATUS PILL ─────────────────────────────────
+            window.howtojoin = function () {
+                document.getElementById("joinContainer").classList.toggle("open");
+            };
+
+            // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
             const STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
-            const STATUS_RECHECK_MS = 2 * 1000;    // re-evaluate staleness every 2s for prompt detection
+            const STATUS_RECHECK_MS = 2 * 1000; // re-evaluate staleness every 2s for prompt detection
             let liveStatusData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
             let statusRecheckInterval = null;
 
@@ -1571,7 +1614,7 @@ const firebaseConfig = {
 
                 const stateMap = {
                     online: { dotClass: "online", text: "Online" },
-                    restarting: { dotClass: "pending", text: "Restarting…" },
+                    restarting: { dotClass: "pending", text: "Starting…" },
                     stopping: { dotClass: "pending", text: "Stopping…" },
                     offline: { dotClass: "offline", text: "Offline" }
                 };
