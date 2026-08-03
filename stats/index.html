@@ -9,6 +9,45 @@
         <link
             href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Spectral:wght@700&display=swap"
             rel="stylesheet" />
+
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                }
+                function setStored(v) {
+                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                    var input = document.getElementById("themeToggleInput");
+                    if (input) input.checked = theme === "dark";
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
+                        }
+                    } catch (_) {}
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                        window.__refreshChartsForTheme && window.__refreshChartsForTheme();
+                    }
+                });
+            })();
+        </script>
+
         <style>
             :root {
                 --primary-blue: #4a90e2;
@@ -27,6 +66,33 @@
                 --shadow-sm: 0 1px 3px rgba(74, 144, 226, 0.08);
                 --shadow-md: 0 4px 12px rgba(74, 144, 226, 0.12);
                 --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
+                --chart-grid: #e8f4f8;
+                --chart-tick: #718096;
+            }
+
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --warning: #f6c90e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+                --chart-grid: #2c3b4a;
+                --chart-tick: #8a97a6;
+            }
+
+            html {
+                transition: background-color 0.25s ease;
             }
 
             * {
@@ -41,6 +107,11 @@
                 color: var(--text-dark);
                 min-height: 100vh;
                 line-height: 1.6;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            .stat-card, .players-card, .graph-card, .status-strip, footer, .range-btn {
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             }
 
             h1,
@@ -361,6 +432,9 @@
                 font-weight: 600;
                 z-index: 2;
             }
+            :root[data-theme="dark"] .graph-loading {
+                background: rgba(20, 28, 38, 0.85);
+            }
             .graph-loading.visible {
                 display: flex;
             }
@@ -390,6 +464,11 @@
                 font-size: 0.92rem;
                 font-weight: 500;
             }
+            :root[data-theme="dark"] .stale-banner {
+                background: linear-gradient(135deg, #3a3312, #4a3d10);
+                border-color: #7a6414;
+                color: #f6d55c;
+            }
             .stale-banner.visible {
                 display: block;
             }
@@ -401,6 +480,9 @@
                 padding: 2rem;
                 font-size: 0.9rem;
                 margin-top: 2rem;
+            }
+            :root[data-theme="dark"] footer {
+                background: #0d1319;
             }
             footer a {
                 color: var(--accent-blue);
@@ -670,6 +752,22 @@
                 let lastSuccessAt = null;
                 let charts = { cpu: null, ram: null, net: null, players: null };
                 let historyRequestSeq = 0; // guards against a slow older request overwriting a newer one
+                let lastHistoryRows = []; // cached so we can redraw charts on a theme change without refetching
+
+                // ---------------------------------------------------------------------
+                // THEME-AWARE CHART COLORS
+                // ---------------------------------------------------------------------
+                function chartGridColor() {
+                    return getComputedStyle(document.documentElement).getPropertyValue("--chart-grid").trim() || "#e8f4f8";
+                }
+                function chartTickColor() {
+                    return getComputedStyle(document.documentElement).getPropertyValue("--chart-tick").trim() || "#718096";
+                }
+                // Called when the theme changes (via the message listener in <head>) so
+                // existing charts get redrawn with grid/tick colors matching the new theme.
+                window.__refreshChartsForTheme = function () {
+                    renderHistory(lastHistoryRows);
+                };
 
                 // ---------------------------------------------------------------------
                 // HELPERS
@@ -784,15 +882,18 @@
                     empty.style.display = hasData ? "none" : "flex";
                     if (!hasData) return null;
 
+                    const gridColor = chartGridColor();
+                    const tickColor = chartTickColor();
+
                     const yScale = {
                         beginAtZero: true,
-                        grid: { color: "#e8f4f8" },
-                        ticks: { color: "#718096" }
+                        grid: { color: gridColor },
+                        ticks: { color: tickColor }
                     };
                     if (yMax != null) {
                         yScale.max = yMax;
                         // Whole-number ticks make sense for a small integer range like player count
-                        yScale.ticks = { color: "#718096", stepSize: 1 };
+                        yScale.ticks = { color: tickColor, stepSize: 1 };
                     }
 
                     return new Chart(canvas, {
@@ -808,7 +909,7 @@
                                     type: "time",
                                     time: { tooltipFormat: "PP p" },
                                     grid: { display: false },
-                                    ticks: { color: "#718096", maxTicksLimit: 6 }
+                                    ticks: { color: tickColor, maxTicksLimit: 6 }
                                 },
                                 y: yScale
                             },
@@ -820,6 +921,7 @@
 
                 function renderHistory(rows) {
                     if (!Array.isArray(rows)) rows = [];
+                    lastHistoryRows = rows;
 
                     if (charts.cpu) charts.cpu.destroy();
                     if (charts.ram) charts.ram.destroy();
