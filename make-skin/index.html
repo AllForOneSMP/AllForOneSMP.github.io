@@ -2,14 +2,13 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="theme-color" content="#4a90e2" />
-        <title>AllForOne SMP</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AllForOne SMP | Skin Upload</title>
         <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Spectral:wght@600;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
         <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
@@ -30,8 +29,6 @@
                 }
                 function apply(theme) {
                     document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
-                    var input = document.getElementById("themeToggleInput");
-                    if (input) input.checked = theme === "dark";
                 }
                 window.__setTheme = function (theme) {
                     setStored(theme);
@@ -40,6 +37,12 @@
                 apply(getStored() || "light");
                 document.addEventListener("DOMContentLoaded", function () {
                     apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
                 });
             })();
         </script>
@@ -50,18 +53,17 @@
                 --light-blue: #e8f4f8;
                 --lighter-blue: #f5fbfd;
                 --dark-blue: #2c5f8d;
+                --accent-blue: #5ba3f5;
                 --text-dark: #1a2332;
                 --text-medium: #4a5568;
+                --text-light: #718096;
                 --border-color: #d4e8f0;
                 --white: #ffffff;
-                --nav-height: 64px;
-                --banner-height: 0px; /* updated by JS */
-                --safe-top: env(safe-area-inset-top, 0px);
-                --safe-bottom: env(safe-area-inset-bottom, 0px);
-                --safe-left: env(safe-area-inset-left, 0px);
-                --safe-right: env(safe-area-inset-right, 0px);
-                --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-                --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+                --error: #e74c3c;
+                --success: #27ae60;
+                --shadow-sm: 0 1px 3px rgba(74, 144, 226, 0.08);
+                --shadow-md: 0 4px 12px rgba(74, 144, 226, 0.12);
+                --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
             }
 
             :root[data-theme="dark"] {
@@ -69,464 +71,309 @@
                 --light-blue: #1e2a38;
                 --lighter-blue: #141c26;
                 --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
                 --text-dark: #eef2f7;
                 --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
                 --border-color: #2c3b4a;
                 --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
             }
 
+            html {
+                transition: background-color 0.25s ease;
+            }
             * {
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
-                -webkit-tap-highlight-color: transparent;
             }
-
-            html,
             body {
-                height: 100%;
-                width: 100%;
-                overflow: hidden;
-                background: var(--white);
                 font-family: "DM Sans", sans-serif;
-                overscroll-behavior: none;
-                transition: background-color 0.25s ease;
-            }
-
-            button {
-                touch-action: manipulation;
-                font-size: 16px; /* prevents iOS zoom on focus */
-            }
-
-            /* ─── NAV ─── */
-            nav {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: calc(var(--nav-height) + var(--safe-top));
-                padding-top: var(--safe-top);
-                background: rgba(255, 255, 255, 0.92);
-                backdrop-filter: blur(16px) saturate(180%);
-                -webkit-backdrop-filter: blur(16px) saturate(180%);
-                border-bottom: 1.5px solid var(--border-color);
-                box-shadow: 0 2px 24px rgba(74, 144, 226, 0.08);
-                display: flex;
-                align-items: center;
-                padding-left: max(1.25rem, var(--safe-left));
-                padding-right: max(1.25rem, var(--safe-right));
-                z-index: 100;
+                background: linear-gradient(135deg, var(--lighter-blue) 0%, var(--light-blue) 100%);
+                color: var(--text-dark);
+                min-height: 100vh;
+                line-height: 1.6;
                 transition:
                     background-color 0.25s ease,
-                    border-color 0.25s ease;
+                    color 0.25s ease;
             }
-            :root[data-theme="dark"] nav {
-                background: rgba(20, 28, 38, 0.92);
-            }
-            .nav-inner {
-                width: 100%;
-                max-width: 2400px;
-                margin: 0 auto;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                height: var(--nav-height);
-                min-width: 0;
-                gap: 0.75rem;
-            }
-            .logo {
+            h1,
+            h2,
+            h3,
+            h4 {
                 font-family: "Spectral", serif;
-                font-size: 1.6rem;
                 font-weight: 700;
-                color: var(--primary-blue);
-                text-decoration: none;
-                letter-spacing: -0.01em;
-                white-space: nowrap;
-                flex-shrink: 0;
-                transition: color 0.2s var(--ease-standard);
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-            }
-            .logo img {
-                height: 40px;
-                max-width: 100%;
-                display: block;
-            }
-            .logo:hover {
-                color: var(--dark-blue);
             }
 
-            .nav-links {
-                display: flex;
-                align-items: center;
-                gap: 0.2rem;
-                list-style: none;
-                min-width: 0;
-                flex-wrap: nowrap;
-            }
-            .nav-links button {
-                color: var(--text-medium);
-                background: none;
-                border: none;
-                font-family: "DM Sans", sans-serif;
-                font-weight: 500;
-                font-size: 0.97rem;
-                padding: 0.45rem 0.9rem;
-                border-radius: 8px;
-                cursor: pointer;
+            .card,
+            input,
+            textarea,
+            select,
+            .upload-zone,
+            .toast,
+            .skin-type-btn,
+            .command-box,
+            .step-pill {
                 transition:
-                    color 0.18s var(--ease-standard),
-                    background 0.18s var(--ease-standard);
-                white-space: nowrap;
-                position: relative;
-            }
-            .nav-links button:hover {
-                color: var(--primary-blue);
-                background: var(--lighter-blue);
-            }
-            .nav-links button.active {
-                color: var(--primary-blue);
-                background: var(--light-blue);
-                font-weight: 600;
-            }
-            .nav-links button::after {
-                content: "";
-                position: absolute;
-                bottom: 4px;
-                left: 50%;
-                right: 50%;
-                height: 2px;
-                background: var(--primary-blue);
-                border-radius: 2px;
-                transition:
-                    left 0.28s var(--ease-out),
-                    right 0.28s var(--ease-out);
-            }
-            .nav-links button.active::after {
-                left: 12px;
-                right: 12px;
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease,
+                    box-shadow 0.2s ease;
             }
 
-            /* ─── THEME TOGGLE (nav) ─── */
-            .theme-toggle-row {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-shrink: 0;
-            }
-            .theme-toggle-switch {
-                position: relative;
-                width: 44px;
-                height: 24px;
-                flex-shrink: 0;
-                display: inline-block;
-            }
-            .theme-toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-            .theme-toggle-slider {
-                position: absolute;
-                inset: 0;
-                background: #cbd5e0;
-                border-radius: 24px;
-                cursor: pointer;
-                transition: background 0.25s;
-            }
-            :root[data-theme="dark"] .theme-toggle-slider {
-                background: #4a5568;
-            }
-            .theme-toggle-slider::before {
-                content: "\2600";
-                position: absolute;
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                top: 3px;
-                background: white;
-                border-radius: 50%;
-                transition: transform 0.25s;
+            .page-layout {
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 2rem;
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                line-height: 1;
-            }
-            .theme-toggle-switch input:checked + .theme-toggle-slider {
-                background: var(--primary-blue);
-            }
-            .theme-toggle-switch input:checked + .theme-toggle-slider::before {
-                transform: translateX(20px);
-                content: "\1F319";
-            }
-
-            /* ─── HAMBURGER ─── */
-            .hamburger {
-                display: none;
                 flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 5px;
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 0.6rem;
-                border-radius: 8px;
-                transition: background 0.18s var(--ease-standard);
-                flex-shrink: 0;
-                min-width: 44px;
-                min-height: 44px;
-            }
-            .hamburger:hover {
-                background: var(--lighter-blue);
-            }
-            .hamburger span {
-                display: block;
-                width: 22px;
-                height: 2.5px;
-                background: var(--text-medium);
-                border-radius: 2px;
-                transition: all 0.32s var(--ease-standard);
-                transform-origin: center;
-            }
-            .hamburger.open span:nth-child(1) {
-                transform: translateY(7.5px) rotate(45deg);
-            }
-            .hamburger.open span:nth-child(2) {
-                opacity: 0;
-                transform: scaleX(0);
-            }
-            .hamburger.open span:nth-child(3) {
-                transform: translateY(-7.5px) rotate(-45deg);
+                gap: 2rem;
             }
 
-            /* ─── NOTIFICATION BANNER ─── */
-            #notifBanner {
-                position: fixed;
-                top: calc(var(--nav-height) + var(--safe-top));
-                left: 0;
-                right: 0;
-                z-index: 98;
-                overflow: hidden;
-                max-height: 0;
-                transition:
-                    max-height 0.42s var(--ease-standard),
-                    opacity 0.32s ease;
-                opacity: 0;
-                will-change: max-height, opacity;
-            }
-            #notifBanner.visible {
-                max-height: 160px;
-                opacity: 1;
-            }
-            .banner-inner {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 0.5rem 1rem;
-                padding: 0.7rem 3rem;
-                padding-left: max(3rem, calc(var(--safe-left) + 1rem));
-                padding-right: max(3rem, calc(var(--safe-right) + 1rem));
-                font-size: 0.95rem;
-                font-weight: 500;
-                min-height: 44px;
-                position: relative;
-            }
-            .banner-text {
-                flex: 1 1 auto;
+            .intro {
                 text-align: center;
-                min-width: 120px;
-                word-break: break-word;
             }
-            .banner-btn {
-                display: inline-block;
-                padding: 0.35rem 1rem;
-                border-radius: 20px;
-                font-size: 0.85rem;
-                font-weight: 700;
-                cursor: pointer;
-                border: none;
-                font-family: "DM Sans", sans-serif;
-                white-space: nowrap;
-                flex-shrink: 0;
-                transition:
-                    opacity 0.2s var(--ease-standard),
-                    transform 0.15s var(--ease-standard);
-                text-decoration: none;
+            .intro h1 {
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 2.4rem;
+                letter-spacing: 0.06em;
+                color: var(--primary-blue);
+                margin-bottom: 0.5rem;
             }
-            .banner-btn:hover {
-                opacity: 0.85;
-                transform: translateY(-1px);
-            }
-            .banner-close {
-                position: absolute;
-                right: max(0.5rem, var(--safe-right));
-                top: 0.6rem;
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-size: 1.1rem;
-                opacity: 0.6;
-                padding: 0.4rem;
-                min-width: 32px;
-                min-height: 32px;
-                transition: opacity 0.2s var(--ease-standard);
-            }
-            .banner-close:hover {
-                opacity: 1;
+            .intro p {
+                color: var(--text-medium);
+                max-width: 480px;
+                margin: 0 auto;
             }
 
-            /* ─── MOBILE DRAWER ─── */
-            .drawer {
-                position: fixed;
-                top: calc(var(--nav-height) + var(--safe-top));
-                left: 0;
-                right: 0;
-                background: rgba(255, 255, 255, 0.97);
-                backdrop-filter: blur(20px);
-                border-bottom: 1.5px solid var(--border-color);
-                box-shadow: 0 8px 32px rgba(74, 144, 226, 0.12);
-                z-index: 99;
-                overflow: hidden;
-                max-height: 0;
-                transition:
-                    max-height 0.36s var(--ease-standard),
-                    opacity 0.26s ease;
-                opacity: 0;
-                will-change: max-height, opacity;
+            .card {
+                background: var(--white);
+                border-radius: 16px;
+                padding: 2rem;
+                box-shadow: var(--shadow-md);
+                border: 1px solid var(--border-color);
             }
-            :root[data-theme="dark"] .drawer {
-                background: rgba(20, 28, 38, 0.97);
+
+            .step-pill {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: var(--primary-blue);
+                color: white;
+                font-size: 0.8rem;
+                font-weight: 700;
+                margin-right: 0.6rem;
+                flex-shrink: 0;
             }
-            .drawer.open {
-                max-height: 460px;
-                opacity: 1;
-                overflow-y: auto;
-            }
-            .drawer-links {
-                list-style: none;
-                padding: 0.75rem max(1rem, var(--safe-left)) calc(1rem + var(--safe-bottom));
-                display: flex;
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-            .drawer-links button {
-                width: 100%;
-                text-align: left;
-                background: none;
-                border: none;
-                font-family: "DM Sans", sans-serif;
-                font-weight: 500;
-                font-size: 1.05rem;
-                color: var(--text-medium);
-                padding: 0.8rem 1rem;
-                border-radius: 10px;
-                cursor: pointer;
-                min-height: 44px;
-                transition:
-                    color 0.18s var(--ease-standard),
-                    background 0.18s var(--ease-standard);
-            }
-            .drawer-links button:hover,
-            .drawer-links button:active {
-                color: var(--primary-blue);
-                background: var(--lighter-blue);
-            }
-            .drawer-links button.active {
-                color: var(--primary-blue);
-                background: var(--light-blue);
-                font-weight: 600;
-            }
-            .drawer-theme-row {
+            .step-heading {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                padding: 0.8rem 1rem;
-                border-top: 1px solid var(--border-color);
-                margin-top: 0.4rem;
+                font-size: 1.1rem;
+                color: var(--text-dark);
+                margin-bottom: 1.1rem;
             }
-            .drawer-theme-row span {
-                font-size: 0.95rem;
-                color: var(--text-medium);
-                font-weight: 500;
+            .step-heading.disabled {
+                color: var(--text-light);
             }
-
-            /* ─── CONTENT AREA ─── */
-            .content-shell {
-                position: fixed;
-                top: calc(var(--nav-height) + var(--safe-top) + var(--banner-height));
-                left: 0;
-                right: 0;
-                bottom: 0;
-                overflow: hidden;
-                transition: top 0.42s var(--ease-standard);
+            .step-heading.disabled .step-pill {
+                background: var(--border-color);
+                color: var(--text-light);
             }
 
-            .frame-slot {
-                position: absolute;
-                inset: 0;
-                opacity: 0;
-                transform: translateY(14px) scale(0.99);
-                transition:
-                    opacity 0.4s var(--ease-out),
-                    transform 0.4s var(--ease-out);
-                pointer-events: none;
-                will-change: opacity, transform;
+            .form-group {
+                margin-bottom: 1.1rem;
             }
-            .frame-slot.visible {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                pointer-events: auto;
-                z-index: 2;
-            }
-            .frame-slot.exit {
-                opacity: 0;
-                transform: translateY(-8px) scale(1.005);
-                pointer-events: none;
-                z-index: 1;
-                transition:
-                    opacity 0.3s var(--ease-standard),
-                    transform 0.3s var(--ease-standard);
-            }
-            .frame-slot iframe {
-                width: 100%;
-                height: 100%;
-                border: none;
+            label {
                 display: block;
+                margin-bottom: 0.4rem;
+                font-weight: 500;
+                font-size: 0.9rem;
+                color: var(--text-dark);
+            }
+            input[type="text"] {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border: 2px solid var(--border-color);
+                border-radius: 10px;
+                font-size: 0.95rem;
+                font-family: "DM Sans", sans-serif;
+                background: var(--lighter-blue);
+                color: var(--text-dark);
+            }
+            input:focus {
+                outline: none;
+                border-color: var(--primary-blue);
                 background: var(--white);
             }
 
-            /* ─── LOADING SHIMMER ─── */
-            .frame-loader {
-                position: absolute;
-                inset: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
+            .btn {
+                padding: 0.75rem 1.5rem;
+                border: none;
+                border-radius: 10px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+                transition: all 0.2s;
+            }
+            .btn-primary {
+                background: var(--primary-blue);
+                color: white;
+            }
+            .btn-primary:hover:not(:disabled) {
+                background: var(--dark-blue);
+                transform: translateY(-1px);
+            }
+            .btn-primary:disabled {
+                background: #a9c8ea;
+                cursor: default;
+                transform: none;
+            }
+            .btn-outline {
+                background: var(--white);
+                color: var(--primary-blue);
+                border: 2px solid var(--border-color);
+            }
+            .btn-outline:hover {
+                border-color: var(--primary-blue);
                 background: var(--lighter-blue);
-                gap: 1rem;
-                transition:
-                    opacity 0.3s var(--ease-standard),
-                    background-color 0.25s ease;
-                padding: 1rem;
+            }
+
+            /* Upload zone */
+            .upload-zone {
+                border: 2px dashed var(--border-color);
+                border-radius: 12px;
+                padding: 2.25rem 1.5rem;
                 text-align: center;
-                z-index: 0;
+                background: var(--lighter-blue);
+                cursor: pointer;
             }
-            .frame-loader.hidden {
-                opacity: 0;
-                pointer-events: none;
+            .upload-zone:hover {
+                border-color: var(--primary-blue);
+                background: var(--light-blue);
             }
-            .loader-spinner {
-                width: 36px;
-                height: 36px;
-                border: 3px solid var(--border-color);
-                border-top-color: var(--primary-blue);
+            .upload-zone p {
+                color: var(--text-medium);
+                margin-bottom: 0.3rem;
+                font-weight: 500;
+            }
+            .upload-zone small {
+                color: var(--text-light);
+            }
+            .upload-zone.has-file {
+                cursor: default;
+                padding: 1.25rem;
+            }
+
+            .skin-preview-row {
+                display: flex;
+                align-items: center;
+                gap: 1.25rem;
+            }
+            .skin-preview-canvas-wrap {
+                background: repeating-conic-gradient(var(--lighter-blue) 0% 25%, var(--light-blue) 0% 50%) 50% / 16px
+                    16px;
+                border: 2px solid var(--border-color);
+                border-radius: 10px;
+                padding: 0.5rem;
+                flex-shrink: 0;
+            }
+            #skinCanvas {
+                display: block;
+                image-rendering: pixelated;
+                width: 96px;
+                height: 96px;
+            }
+            .skin-preview-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .skin-preview-info .fname {
+                font-weight: 600;
+                color: var(--text-dark);
+                font-size: 0.95rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .skin-preview-info .fdims {
+                color: var(--text-light);
+                font-size: 0.85rem;
+                margin-top: 0.2rem;
+            }
+            .change-file-link {
+                background: none;
+                border: none;
+                color: var(--primary-blue);
+                font-weight: 600;
+                font-size: 0.85rem;
+                cursor: pointer;
+                padding: 0;
+                margin-top: 0.5rem;
+                font-family: "DM Sans", sans-serif;
+            }
+            .change-file-link:hover {
+                text-decoration: underline;
+            }
+
+            .skin-type-choices {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+            @media (max-width: 520px) {
+                .skin-type-choices {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .skin-type-btn {
+                border: 2px solid var(--border-color);
+                background: var(--lighter-blue);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: left;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+            }
+            .skin-type-btn:hover {
+                border-color: var(--accent-blue);
+            }
+            .skin-type-btn.selected {
+                border-color: var(--primary-blue);
+                background: var(--light-blue);
+            }
+            .skin-type-btn strong {
+                display: block;
+                color: var(--text-dark);
+                font-size: 0.95rem;
+                margin-bottom: 0.2rem;
+            }
+            .skin-type-btn span {
+                color: var(--text-medium);
+                font-size: 0.82rem;
+            }
+
+            .progress-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+            .spinner {
+                border: 3px solid var(--light-blue);
+                border-top: 3px solid var(--primary-blue);
                 border-radius: 50%;
-                animation: spin 0.8s linear infinite;
+                width: 20px;
+                height: 20px;
+                animation: spin 1s linear infinite;
                 flex-shrink: 0;
             }
             @keyframes spin {
@@ -534,612 +381,356 @@
                     transform: rotate(360deg);
                 }
             }
-            .loader-text {
-                font-family: "DM Sans", sans-serif;
+            .progress-row span {
                 color: var(--text-medium);
-                font-size: 0.88rem;
-                letter-spacing: 0.02em;
+                font-size: 0.9rem;
             }
 
-            /* ─── RIPPLE ─── */
-            .ripple-overlay {
+            .command-box {
+                background: var(--text-dark);
+                color: #d6f0ff;
+                border-radius: 10px;
+                padding: 1rem 1.15rem;
+                font-family: "DM Sans", monospace;
+                font-size: 0.9rem;
+                word-break: break-all;
+                position: relative;
+                border: 1px solid var(--border-color);
+            }
+            :root[data-theme="dark"] .command-box {
+                background: #0b1119;
+            }
+            .command-actions {
+                display: flex;
+                gap: 0.6rem;
+                margin-top: 0.9rem;
+                flex-wrap: wrap;
+            }
+
+            .hint {
+                font-size: 0.82rem;
+                color: var(--text-light);
+                margin-top: 0.3rem;
+            }
+            .error-text {
+                color: var(--error);
+                font-size: 0.85rem;
+                margin-top: 0.5rem;
+                display: none;
+            }
+            .divider {
+                border: none;
+                border-top: 1px solid var(--border-color);
+                margin: 1.5rem 0;
+            }
+
+            .toast {
                 position: fixed;
-                inset: 0;
-                pointer-events: none;
-                z-index: 200;
-                overflow: hidden;
+                bottom: 2rem;
+                right: 2rem;
+                left: 2rem;
+                max-width: 380px;
+                margin-left: auto;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                color: white;
+                font-weight: 500;
+                font-size: 0.95rem;
+                box-shadow: var(--shadow-lg);
+                z-index: 9999;
+                animation: slideInRight 0.4s ease;
+                display: none;
             }
-            .ripple {
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(74, 144, 226, 0.12);
-                transform: scale(0);
-                animation: rippleOut 0.55s var(--ease-standard) forwards;
+            .toast.success {
+                background: var(--success);
             }
-            @keyframes rippleOut {
-                to {
-                    transform: scale(40);
+            .toast.error {
+                background: var(--error);
+            }
+            @keyframes slideInRight {
+                from {
                     opacity: 0;
+                    transform: translateX(60px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
                 }
             }
 
-            /* ─── RESPONSIVE BREAKPOINTS ─── */
-            @media (max-width: 900px) {
-                .nav-links button {
-                    font-size: 0.9rem;
-                    padding: 0.4rem 0.65rem;
+            @media (max-width: 768px) {
+                .page-layout {
+                    padding: 1.25rem;
+                    gap: 1.5rem;
                 }
-            }
-
-            @media (max-width: 700px) {
-                nav {
-                    padding-left: max(1rem, var(--safe-left));
-                    padding-right: max(1rem, var(--safe-right));
+                .card {
+                    padding: 1.25rem;
                 }
-                .nav-links {
-                    display: none;
+                .intro h1 {
+                    font-size: 2rem;
                 }
-                .hamburger {
-                    display: flex;
-                }
-                .logo img {
-                    height: 34px;
-                }
-                .banner-inner {
-                    padding: 0.65rem 2.75rem;
-                    padding-left: max(2.75rem, calc(var(--safe-left) + 0.75rem));
-                    padding-right: max(2.75rem, calc(var(--safe-right) + 0.75rem));
-                    font-size: 0.88rem;
-                }
-                .banner-btn {
-                    font-size: 0.8rem;
-                    padding: 0.3rem 0.85rem;
-                }
-                /* Move the toggle into the drawer on mobile; hide the nav-bar copy */
-                .nav-theme-toggle {
-                    display: none;
-                }
-            }
-
-            @media (max-width: 400px) {
-                .logo img {
-                    height: 28px;
-                }
-                nav {
-                    padding-left: max(0.75rem, var(--safe-left));
-                    padding-right: max(0.75rem, var(--safe-right));
-                }
-                .banner-text {
-                    font-size: 0.82rem;
-                }
-            }
-
-            /* Landscape phones: shrink nav a bit to save vertical space */
-            @media (max-height: 420px) and (orientation: landscape) {
-                :root {
-                    --nav-height: 52px;
-                }
-                .logo img {
-                    height: 30px;
-                }
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-                *,
-                *::before,
-                *::after {
-                    animation-duration: 0.01ms !important;
-                    transition-duration: 0.01ms !important;
+                .toast {
+                    right: 1rem;
+                    left: 1rem;
+                    bottom: 1rem;
+                    max-width: none;
                 }
             }
         </style>
     </head>
     <body>
-        <nav>
-            <div class="nav-inner">
-                <a href="/" style="display: contents">
-                    <span class="logo" onclick="navigate('/', event)">
-                        <img src="https://allforonesmp.github.io/images/logo.png" alt="AllForOne SMP Logo" />
-                    </span>
-                </a>
+        <div class="page-layout">
+            <div class="intro">
+                <h1>Set Your Skin</h1>
+                <p>Upload a skin file, tell us the model, and we'll give you the exact command to type in-game.</p>
+            </div>
 
-                <ul class="nav-links" id="navLinks">
-                    <li><button data-path="/" onclick="navigate('/', event)">Home</button></li>
-                    <li><button data-path="/mods" onclick="navigate('/mods', event)">Mods</button></li>
-                    <li><button data-path="/rules" onclick="navigate('/rules', event)">Rules</button></li>
-                    <li><button data-path="/make-skin" onclick="navigate('/make-skin', event)">Create Skin</button></li>
-                    <li><button data-path="/admin" onclick="navigate('/admin', event)">Admin Page</button></li>
-                    <li><button data-path="/stats" onclick="navigate('/stats', event)">Stats For 🤓's</button></li>
-                </ul>
-
-                <div class="theme-toggle-row nav-theme-toggle" title="Toggle dark mode">
-                    <label class="theme-toggle-switch">
-                        <input
-                            type="checkbox"
-                            id="themeToggleInput"
-                            onchange="window.__setTheme(this.checked ? 'dark' : 'light')" />
-                        <span class="theme-toggle-slider"></span>
-                    </label>
+            <!-- STEP 1: UPLOAD -->
+            <div class="card">
+                <div class="step-heading">
+                    <span class="step-pill">1</span>
+                    Upload your skin
                 </div>
 
-                <button
-                    class="hamburger"
-                    id="hamburgerBtn"
-                    aria-label="Open menu"
-                    aria-expanded="false"
-                    onclick="toggleDrawer()">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </nav>
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('skinFileInput').click()">
+                    <p>Click to upload a skin file</p>
+                    <small>Must be a .png — typically 64×64 or 64×32</small>
+                </div>
+                <input type="file" id="skinFileInput" accept=".png,image/png" style="display: none" onchange="handleFileSelect(event)" />
 
-        <!-- Notification Banner -->
-        <div id="notifBanner">
-            <div class="banner-inner" id="bannerInner">
-                <span class="banner-text" id="bannerText"></span>
-                <a class="banner-btn" id="bannerBtn" href="#" target="_blank" rel="noopener" style="display: none"></a>
-                <button class="banner-close" id="bannerClose" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
+                <div id="skinPreviewWrap" style="display: none">
+                    <div class="skin-preview-row">
+                        <div class="skin-preview-canvas-wrap">
+                            <canvas id="skinCanvas" width="64" height="64"></canvas>
+                        </div>
+                        <div class="skin-preview-info">
+                            <div class="fname" id="skinFileName"></div>
+                            <div class="fdims" id="skinFileDims"></div>
+                            <button class="change-file-link" onclick="document.getElementById('skinFileInput').click()">
+                                Choose a different file
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-text" id="fileError"></div>
+            </div>
+
+            <!-- STEP 2: SKIN TYPE -->
+            <div class="card">
+                <div class="step-heading" id="step2Heading">
+                    <span class="step-pill">2</span>
+                    Choose your skin model
+                </div>
+
+                <div class="skin-type-choices">
+                    <button class="skin-type-btn" id="classicBtn" onclick="selectSkinType('classic')">
+                        <strong>Classic</strong>
+                        <span>Regular arm width (Steve model)</span>
+                    </button>
+                    <button class="skin-type-btn" id="slimBtn" onclick="selectSkinType('slim')">
+                        <strong>Slim</strong>
+                        <span>Narrow arm width (Alex model)</span>
+                    </button>
+                </div>
+                <p class="hint">Not sure? Most skins downloaded without saying "slim" are Classic.</p>
+            </div>
+
+            <!-- STEP 3: SUBMIT -->
+            <div class="card">
+                <div class="step-heading" id="step3Heading">
+                    <span class="step-pill">3</span>
+                    Upload your skin
+                </div>
+
+                <button class="btn btn-primary" id="uploadBtn" onclick="uploadSkin()" disabled>Upload &amp; Get Command</button>
+
+                <div class="progress-row" id="progressRow" style="display: none">
+                    <div class="spinner"></div>
+                    <span>Uploading your skin…</span>
+                </div>
+            </div>
+
+            <!-- STEP 4: RESULT -->
+            <div class="card" id="resultCard" style="display: none">
+                <div class="step-heading">
+                    <span class="step-pill">✓</span>
+                    Type this command in-game
+                </div>
+                <div class="command-box" id="commandBox"></div>
+                <div class="command-actions">
+                    <button class="btn btn-outline" onclick="copyCommand()">Copy Command</button>
+                    <button class="btn btn-outline" onclick="startOver()">Upload Another Skin</button>
+                </div>
+                <p class="hint" style="margin-top: 1rem">
+                    Paste this straight into the Minecraft chat box on the server and press Enter.
+                </p>
             </div>
         </div>
 
-        <!-- Mobile Drawer -->
-        <div class="drawer" id="drawer">
-            <ul class="drawer-links" id="drawerLinks">
-                <li><button data-path="/" onclick="navigate('/', event); closeDrawer()">Home</button></li>
-                <li><button data-path="/mods" onclick="navigate('/mods', event); closeDrawer()">Mods</button></li>
-                <li><button data-path="/rules" onclick="navigate('/rules', event); closeDrawer()">Rules</button></li>
-                <li>
-                    <button data-path="/make-skin" onclick="navigate('/make-skin', event); closeDrawer()">
-                        Create Skin
-                    </button>
-                </li>
-                <li>
-                    <button data-path="/profile" onclick="navigate('/profile', event); closeDrawer()">Profile</button>
-                </li>
-                <li><button data-path="/post" onclick="navigate('/post', event); closeDrawer()">Post</button></li>
-                <li>
-                    <button data-path="/admin" onclick="navigate('/admin', event); closeDrawer()">Admin Page</button>
-                </li>
-                <li>
-                    <button data-path="/stats" onclick="navigate('/stats', event); closeDrawer()">
-                        Stats For 🤓's
-                    </button>
-                </li>
-            </ul>
-            <div class="drawer-theme-row">
-                <span>Dark mode</span>
-                <label class="theme-toggle-switch">
-                    <input
-                        type="checkbox"
-                        id="themeToggleInputMobile"
-                        onchange="window.__setTheme(this.checked ? 'dark' : 'light')" />
-                    <span class="theme-toggle-slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="ripple-overlay" id="rippleOverlay"></div>
-        <div class="content-shell" id="contentShell"></div>
+        <div class="toast" id="toast"></div>
 
         <script>
-            // ── Recursion guard ─────────────────────────────────────────
-            // If this shell is itself running inside one of its own
-            // iframes (i.e. a route page like main.html mistakenly
-            // contains a full copy of this navbar), stop immediately
-            // instead of spawning another nested navbar+iframe forever.
-            (function () {
+            const CLOUDINARY_CLOUD_NAME = "dgrmpcha9";
+            const CLOUDINARY_UPLOAD_PRESET = "AllForOne Posts";
+
+            let selectedFile = null;
+            let selectedSkinType = null;
+
+            function showToast(msg, type = "success") {
+                const t = document.getElementById("toast");
+                t.textContent = msg;
+                t.className = "toast " + type;
+                t.style.display = "block";
+                setTimeout(() => {
+                    t.style.display = "none";
+                }, 3500);
+            }
+
+            function showFileError(msg) {
+                const el = document.getElementById("fileError");
+                if (!msg) {
+                    el.style.display = "none";
+                    el.textContent = "";
+                    return;
+                }
+                el.textContent = msg;
+                el.style.display = "block";
+            }
+
+            function updateUploadButtonState() {
+                document.getElementById("uploadBtn").disabled = !(selectedFile && selectedSkinType);
+            }
+
+            window.handleFileSelect = function (e) {
+                const file = e.target.files[0];
+                e.target.value = "";
+                if (!file) return;
+                showFileError(null);
+
+                if (!/\.png$/i.test(file.name) && file.type !== "image/png") {
+                    showFileError("That's not a .png file. Please select a PNG skin file.");
+                    return;
+                }
+
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.onload = () => {
+                    const w = img.naturalWidth;
+                    const h = img.naturalHeight;
+                    const validDims =
+                        (w === 64 && (h === 64 || h === 32)) || (w === h && w >= 64) || (w === h * 2 && w >= 64);
+
+                    if (!validDims) {
+                        showFileError(
+                            `This image is ${w}×${h}. Minecraft skins are usually 64×64 (or the legacy 64×32). Double check this is a real skin file before continuing.`
+                        );
+                    }
+
+                    selectedFile = file;
+                    drawSkinPreview(img, w, h);
+
+                    document.getElementById("skinFileName").textContent = file.name;
+                    document.getElementById("skinFileDims").textContent = `${w} × ${h}px`;
+                    document.getElementById("skinPreviewWrap").style.display = "block";
+                    document.getElementById("uploadZone").classList.add("has-file");
+                    document.getElementById("uploadZone").querySelector("p").textContent = "Skin selected";
+                    document.getElementById("uploadZone").querySelector("small").textContent =
+                        "Click to upload a different file";
+
+                    updateUploadButtonState();
+                    URL.revokeObjectURL(objectUrl);
+                };
+                img.onerror = () => {
+                    showFileError("Couldn't read that image. Please try a different PNG file.");
+                    URL.revokeObjectURL(objectUrl);
+                };
+                img.src = objectUrl;
+            };
+
+            function drawSkinPreview(img, w, h) {
+                const canvas = document.getElementById("skinCanvas");
+                const ctx = canvas.getContext("2d");
+                ctx.imageSmoothingEnabled = false;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Draw the face (front head) region, standard skin layout: head at 8,8 sized 8x8
+                if (w >= 64 && h >= 32) {
+                    const scaleX = w / 64;
+                    const scaleY = h / 64 >= 0.5 ? h / 32 : h / 64;
+                    ctx.drawImage(img, 8 * scaleX, 8 * scaleX, 8 * scaleX, 8 * scaleX, 0, 0, 64, 64);
+                } else {
+                    ctx.drawImage(img, 0, 0, w, h, 0, 0, 64, 64);
+                }
+            }
+
+            window.selectSkinType = function (type) {
+                selectedSkinType = type;
+                document.getElementById("classicBtn").classList.toggle("selected", type === "classic");
+                document.getElementById("slimBtn").classList.toggle("selected", type === "slim");
+                updateUploadButtonState();
+            };
+
+            async function uploadToCloudinary(file) {
+                const fd = new FormData();
+                fd.append("file", file);
+                fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: "POST",
+                    body: fd
+                });
+                const data = await res.json();
+                if (!data.secure_url) throw new Error(data.error?.message || "Cloudinary upload failed");
+                return data.secure_url;
+            }
+
+            window.uploadSkin = async function () {
+                if (!selectedFile || !selectedSkinType) {
+                    showToast("Please complete all three steps first.", "error");
+                    return;
+                }
+
+                const btn = document.getElementById("uploadBtn");
+                btn.disabled = true;
+                document.getElementById("progressRow").style.display = "flex";
+
                 try {
-                    var depth = 0;
-                    var win = window;
-                    while (win !== win.parent) {
-                        try {
-                            // Only counts if the parent frame is running the
-                            // same app (same origin required to introspect it).
-                            if (win.parent.document && win.parent.document.getElementById("contentShell")) {
-                                depth++;
-                            }
-                        } catch (_) {
-                            // Cross-origin parent — can't introspect, so we
-                            // can't confirm nesting; stop counting here.
-                            break;
-                        }
-                        win = win.parent;
-                        if (depth > 2) break; // safety bound on the walk itself
-                    }
-                    if (depth >= 1) {
-                        document.documentElement.innerHTML =
-                            '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#4a5568;text-align:center;padding:2rem;">' +
-                            "This page (" +
-                            window.location.pathname +
-                            ") contains the site navbar and was loaded inside another navbar frame, " +
-                            "which would nest infinitely. Remove the &lt;nav&gt;/iframe-shell markup from this page \u2014 " +
-                            "route pages should only contain their own content." +
-                            "</div>";
-                        throw new Error("AllForOne SMP: blocked recursive navbar nesting");
-                    }
+                    const url = await uploadToCloudinary(selectedFile);
+                    const command = `/skin set web ${selectedSkinType} "${url}"`;
+
+                    document.getElementById("commandBox").textContent = command;
+                    document.getElementById("resultCard").style.display = "block";
+                    document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+                    showToast("Skin uploaded! Copy the command below.", "success");
                 } catch (e) {
-                    if (e && e.message && e.message.indexOf("blocked recursive navbar nesting") !== -1) throw e;
-                    // Any other error (e.g. sandboxed iframe with no parent
-                    // access at all) just means we can't check — proceed
-                    // normally rather than breaking legitimate top-level loads.
+                    showToast("Upload failed: " + e.message, "error");
+                    btn.disabled = false;
                 }
-            })();
-        </script>
-
-        <!-- Firebase -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                onSnapshot
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-            const firebaseConfig = {
-                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
-                authDomain: "allforone-stats.firebaseapp.com",
-                projectId: "allforone-stats",
-                storageBucket: "allforone-stats.firebasestorage.app",
-                messagingSenderId: "235057820326",
-                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
-            };
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-
-            // Listen for banner config from Firestore
-            onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
-                if (!snap.exists()) return;
-                const data = snap.data();
-                window._bannerConfig = data.notificationBanner || null;
-                if (window.applyBanner) window.applyBanner(window._currentPath);
-            });
-        </script>
-        <script>
-            const BASE = "https://allforonesmp.github.io";
-            const ROUTES = {
-                "/": BASE + "/main.html",
-                "/mods": BASE + "/mods",
-                "/rules": BASE + "/rules",
-                "/make-skin": BASE + "/make-skin",
-                "/admin": BASE + "/admin",
-                "/stats": BASE + "/stats"
-            };
-            const PAGE_TITLES = {
-                "/": "AllForOne SMP",
-                "/mods": "Mods | AllForOne SMP",
-                "/rules": "Rules | AllForOne SMP",
-                "/make-skin": "Create Skin | AllForOne SMP",
-                "/admin": "Admin | AllForOne SMP",
-                "/stats": "🤓 | AllForOne SMP"
-            };
-            const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
-            const EXIT_DURATION = 320; // must be >= slot exit transition time
-
-            // Only these pages get auto-refreshed every REFRESH_INTERVAL;
-            // all other pages load once and stay as-is.
-            const AUTO_REFRESH_PATHS = ["/", "/rules"];
-
-            const shell = document.getElementById("contentShell");
-            const overlay = document.getElementById("rippleOverlay");
-            const drawer = document.getElementById("drawer");
-            const hamburger = document.getElementById("hamburgerBtn");
-            const notifBanner = document.getElementById("notifBanner");
-            const bannerInner = document.getElementById("bannerInner");
-
-            let currentPath = null;
-            let frames = {};
-            let activeSlot = null;
-            let refreshTimers = {};
-            let exitTimeout = null;
-            let bannerDismissed = false;
-            let bannerResizeObserver = null;
-
-            window._currentPath = "/";
-            window._bannerConfig = null;
-
-            // ── Theme: broadcast to iframes (cross-origin, so postMessage only) ──
-            // The route pages listen for { type: "afo-theme", theme } and re-apply
-            // + persist to their own localStorage. This keeps every open frame in
-            // sync with whatever the user picks in the shell's nav/drawer toggle.
-            function sendThemeToFrame(path) {
-                const frame = frames[path];
-                if (!frame) return;
-                const theme = document.documentElement.getAttribute("data-theme") || "light";
-                try {
-                    frame.iframe.contentWindow.postMessage({ type: "afo-theme", theme: theme }, "*");
-                } catch (_) {}
-            }
-            function broadcastThemeToAllFrames() {
-                Object.keys(frames).forEach(sendThemeToFrame);
-            }
-            // Wrap the theme setter (defined in <head>) so that toggling here also
-            // pushes the change into every iframe that's currently loaded.
-            (function () {
-                const base = window.__setTheme;
-                window.__setTheme = function (theme) {
-                    base(theme);
-                    // Keep both nav + drawer toggles in sync with each other
-                    const a = document.getElementById("themeToggleInput");
-                    const b = document.getElementById("themeToggleInputMobile");
-                    if (a) a.checked = theme === "dark";
-                    if (b) b.checked = theme === "dark";
-                    broadcastThemeToAllFrames();
-                };
-            })();
-            document.addEventListener("DOMContentLoaded", () => {
-                const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-                const a = document.getElementById("themeToggleInput");
-                const b = document.getElementById("themeToggleInputMobile");
-                if (a) a.checked = isDark;
-                if (b) b.checked = isDark;
-            });
-
-            // ── Banner ──────────────────────────────────────────────────
-            function applyBanner(path) {
-                const cfg = window._bannerConfig;
-                const bannerText = document.getElementById("bannerText");
-                const bannerBtn = document.getElementById("bannerBtn");
-                const bannerClose = document.getElementById("bannerClose");
-
-                const hide = () => {
-                    notifBanner.classList.remove("visible");
-                    updateBannerHeight(0);
-                };
-
-                if (!cfg || !cfg.enabled || bannerDismissed) {
-                    hide();
-                    return;
-                }
-
-                // Check if this page should show the banner
-                const pages = cfg.pages || [];
-                if (pages.length > 0 && !pages.includes(path)) {
-                    hide();
-                    return;
-                }
-
-                // Apply colours
-                bannerInner.style.backgroundColor = cfg.bgColor || "#4a90e2";
-                bannerInner.style.color = cfg.textColor || "#ffffff";
-                bannerClose.style.color = cfg.textColor || "#ffffff";
-                bannerText.textContent = cfg.text || "";
-
-                // Button
-                if (cfg.btnLabel && cfg.btnLink) {
-                    bannerBtn.textContent = cfg.btnLabel;
-                    bannerBtn.href = cfg.btnLink;
-                    bannerBtn.style.backgroundColor = cfg.btnBgColor || "rgba(255,255,255,0.25)";
-                    bannerBtn.style.color = cfg.btnTextColor || "#ffffff";
-                    bannerBtn.style.display = "inline-block";
-                } else {
-                    bannerBtn.style.display = "none";
-                }
-
-                notifBanner.classList.add("visible");
-                // Measure real height after layout, and keep it accurate if
-                // the text wraps differently (e.g. on resize/zoom) by
-                // observing the inner element while the banner is visible.
-                requestAnimationFrame(() => {
-                    updateBannerHeight(bannerInner.offsetHeight);
-                });
-                observeBannerSize();
-            }
-            window.applyBanner = applyBanner;
-
-            function observeBannerSize() {
-                if (bannerResizeObserver || typeof ResizeObserver === "undefined") return;
-                bannerResizeObserver = new ResizeObserver((entries) => {
-                    if (!notifBanner.classList.contains("visible")) return;
-                    for (const entry of entries) {
-                        updateBannerHeight(entry.contentRect.height);
-                    }
-                });
-                bannerResizeObserver.observe(bannerInner);
-            }
-
-            function updateBannerHeight(h) {
-                document.documentElement.style.setProperty("--banner-height", h + "px");
-            }
-
-            window.dismissBanner = function () {
-                bannerDismissed = true;
-                notifBanner.classList.remove("visible");
-                updateBannerHeight(0);
+                document.getElementById("progressRow").style.display = "none";
             };
 
-            // ── Page title ───────────────────────────────────────────────
-            function updateTitle(path) {
-                // Try reading iframe title; fallback to our map.
-                // Same-origin/cross-origin access can throw — always fall
-                // back gracefully instead of leaving a stale title.
-                const frame = frames[path];
-                let iframeTitle = null;
-                try {
-                    iframeTitle = frame?.iframe?.contentDocument?.title;
-                } catch (_) {
-                    iframeTitle = null;
-                }
-                document.title = iframeTitle && iframeTitle.trim() ? iframeTitle : PAGE_TITLES[path] || "AllForOne SMP";
-            }
-
-            // ── Ripple ───────────────────────────────────────────────────
-            function spawnRipple(e) {
-                const r = document.createElement("div");
-                r.className = "ripple";
-                const size = 60;
-                // Use the button's own center when triggered via keyboard/
-                // synthetic events (no clientX/Y), rather than always
-                // falling back to viewport center.
-                let x, y;
-                if (e && typeof e.clientX === "number" && (e.clientX !== 0 || e.clientY !== 0)) {
-                    x = e.clientX - size / 2;
-                    y = e.clientY - size / 2;
-                } else if (e && e.target && e.target.getBoundingClientRect) {
-                    const rect = e.target.getBoundingClientRect();
-                    x = rect.left + rect.width / 2 - size / 2;
-                    y = rect.top + rect.height / 2 - size / 2;
-                } else {
-                    x = window.innerWidth / 2 - size / 2;
-                    y = window.innerHeight / 2 - size / 2;
-                }
-                r.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;`;
-                overlay.appendChild(r);
-                r.addEventListener("animationend", () => r.remove(), { once: true });
-            }
-
-            // ── Frame creation ───────────────────────────────────────────
-            function getOrCreateFrame(path) {
-                if (frames[path]) return frames[path];
-
-                const slot = document.createElement("div");
-                slot.className = "frame-slot";
-
-                const loader = document.createElement("div");
-                loader.className = "frame-loader";
-                loader.innerHTML = `<div class="loader-spinner"></div><p class="loader-text">Loading…</p>`;
-                slot.appendChild(loader);
-
-                const iframe = document.createElement("iframe");
-                iframe.src = ROUTES[path];
-                iframe.style.opacity = "0";
-                iframe.style.transition = "opacity 0.35s var(--ease-standard)";
-                iframe.setAttribute("loading", "eager");
-                iframe.setAttribute("title", PAGE_TITLES[path] || "AllForOne SMP");
-
-                iframe.addEventListener("load", () => {
-                    iframe.style.opacity = "1";
-                    loader.classList.add("hidden");
-                    if (currentPath === path) updateTitle(path);
-                    try {
-                        iframe.contentWindow.postMessage({ type: "afo-pathname", pathname: path }, "*");
-                    } catch (_) {}
-                    // Push the current theme into the frame as soon as it's ready,
-                    // so a freshly-loaded page matches whatever the shell is set to.
-                    sendThemeToFrame(path);
-                });
-
-                slot.appendChild(iframe);
-                shell.appendChild(slot);
-
-                frames[path] = { slot, iframe, loader };
-                startRefreshTimer(path);
-                return frames[path];
-            }
-
-            // ── Auto-refresh every 2 minutes (paused while tab hidden) ────
-            // Only runs for pages listed in AUTO_REFRESH_PATHS; every
-            // other page loads once and is left alone.
-            function startRefreshTimer(path) {
-                if (refreshTimers[path]) clearInterval(refreshTimers[path]);
-                if (!AUTO_REFRESH_PATHS.includes(path)) return;
-                refreshTimers[path] = setInterval(() => {
-                    if (document.hidden) return; // don't thrash background tabs
-                    const frame = frames[path];
-                    if (!frame) return;
-                    // Only show the loading spinner for a refresh if this is
-                    // the page currently on screen — refreshing a hidden
-                    // frame shouldn't flash a loader nobody sees, but the
-                    // reload should still happen so it's fresh when visited.
-                    if (path === currentPath) {
-                        frame.iframe.style.opacity = "0";
-                        frame.loader.classList.remove("hidden");
-                    }
-                    frame.iframe.src = ROUTES[path];
-                }, REFRESH_INTERVAL);
-            }
-
-            function setActiveButtons(path) {
-                document.querySelectorAll("[data-path]").forEach((btn) => {
-                    btn.classList.toggle("active", btn.getAttribute("data-path") === path);
-                });
-            }
-
-            window.navigate = function (path, e) {
-                if (!ROUTES[path]) return;
-                if (path === currentPath) {
-                    closeDrawer();
-                    return;
-                }
-                spawnRipple(e);
-                bannerDismissed = false; // reset dismiss on navigation
-
-                // Clear any pending cleanup from a previous rapid nav so
-                // slots don't get stuck mid-transition or removed early.
-                if (exitTimeout) {
-                    clearTimeout(exitTimeout);
-                    exitTimeout = null;
-                }
-
-                const outgoing = activeSlot;
-                if (outgoing) {
-                    outgoing.classList.remove("visible");
-                    outgoing.classList.add("exit");
-                    exitTimeout = setTimeout(() => {
-                        outgoing.classList.remove("exit");
-                        exitTimeout = null;
-                    }, EXIT_DURATION);
-                }
-
-                const frame = getOrCreateFrame(path);
-                // Force reflow before adding "visible" so the enter
-                // transition reliably fires even if the slot was just
-                // created and browsers coalesce back-to-back class changes.
-                void frame.slot.offsetWidth;
-                requestAnimationFrame(() => {
-                    frame.slot.classList.add("visible");
-                });
-
-                activeSlot = frame.slot;
-                currentPath = path;
-                window._currentPath = path;
-                setActiveButtons(path);
-                updateTitle(path);
-                applyBanner(path);
+            window.copyCommand = function () {
+                const text = document.getElementById("commandBox").textContent;
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => showToast("Command copied to clipboard.", "success"))
+                    .catch(() => showToast("Could not copy — please select and copy manually.", "error"));
             };
 
-            // ── Drawer ───────────────────────────────────────────────────
-            window.toggleDrawer = function () {
-                const open = drawer.classList.toggle("open");
-                hamburger.classList.toggle("open", open);
-                hamburger.setAttribute("aria-expanded", String(open));
+            window.startOver = function () {
+                selectedFile = null;
+                selectedSkinType = null;
+                document.getElementById("skinPreviewWrap").style.display = "none";
+                document.getElementById("uploadZone").classList.remove("has-file");
+                document.getElementById("uploadZone").querySelector("p").textContent = "Click to upload a skin file";
+                document.getElementById("uploadZone").querySelector("small").textContent =
+                    "Must be a .png — typically 64×64 or 64×32";
+                document.getElementById("classicBtn").classList.remove("selected");
+                document.getElementById("slimBtn").classList.remove("selected");
+                document.getElementById("resultCard").style.display = "none";
+                document.getElementById("uploadBtn").disabled = true;
+                showFileError(null);
+                window.scrollTo({ top: 0, behavior: "smooth" });
             };
-            window.closeDrawer = function () {
-                if (!drawer.classList.contains("open")) return;
-                drawer.classList.remove("open");
-                hamburger.classList.remove("open");
-                hamburger.setAttribute("aria-expanded", "false");
-            };
-            document.addEventListener("click", (e) => {
-                if (!drawer.contains(e.target) && !hamburger.contains(e.target)) closeDrawer();
-            });
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") closeDrawer();
-            });
-
-            // Recompute banner height on resize/orientation change (text can reflow).
-            // Debounced so rapid resize events (e.g. dragging a window edge)
-            // don't spam layout reads.
-            let resizeRAF = null;
-            window.addEventListener("resize", () => {
-                if (!window._bannerConfig) return;
-                if (resizeRAF) cancelAnimationFrame(resizeRAF);
-                resizeRAF = requestAnimationFrame(() => {
-                    applyBanner(window._currentPath);
-                    resizeRAF = null;
-                });
-            });
-
-            // Pause background iframe refresh cycles cleanly when the tab
-            // becomes hidden/visible instead of relying only on the guard
-            // inside the interval callback — avoids a burst of "catch up"
-            // reloads firing the instant the tab regains focus.
-            document.addEventListener("visibilitychange", () => {
-                if (!document.hidden && currentPath && frames[currentPath]) {
-                    updateTitle(currentPath);
-                }
-            });
-
-            navigate("/", null);
         </script>
     </body>
 </html>
