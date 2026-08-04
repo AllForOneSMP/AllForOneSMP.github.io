@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AllForOne | FAQ</title>
+        <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/logo.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spectral:wght@600;700&display=swap"
+            rel="stylesheet" />
+
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+                }
+                function setStored(v) {
+                    try { localStorage.setItem(STORAGE_KEY, v); } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                    var input = document.getElementById("themeToggleInput");
+                    if (input) input.checked = theme === "dark";
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                    try {
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
+                        }
+                    } catch (_) {}
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
+                });
+            })();
+        </script>
+
+        <style>
+            :root {
+                --primary-blue: #4a90e2;
+                --light-blue: #e8f4f8;
+                --lighter-blue: #f5fbfd;
+                --dark-blue: #2c5f8d;
+                --accent-blue: #5ba3f5;
+                --text-dark: #1a2332;
+                --text-medium: #4a5568;
+                --text-light: #718096;
+                --border-color: #d4e8f0;
+                --white: #ffffff;
+                --error: #e74c3c;
+                --success: #27ae60;
+                --shadow-sm: 0 1px 3px rgba(74, 144, 226, 0.08);
+                --shadow-md: 0 4px 12px rgba(74, 144, 226, 0.12);
+                --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
+                --admin-gold: #f6c90e;
+                --admin-gold-dark: #c9a800;
+                --admin-gradient: linear-gradient(135deg, #f6c90e 0%, #ff8c00 100%);
+            }
+
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            html {
+                transition: background-color 0.25s ease;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "DM Sans", sans-serif;
+                background: linear-gradient(135deg, var(--lighter-blue) 0%, var(--light-blue) 100%);
+                color: var(--text-dark);
+                min-height: 100vh;
+                line-height: 1.6;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            .search-sticky, .card, .faq-item, footer, mark.search-highlight, .search-dropdown, .theme-toggle {
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                font-family: "Spectral", serif;
+                font-weight: 700;
+            }
+
+            /* ── Header ── */
+            .page-header {
+                max-width: 900px;
+                margin: 2rem auto 0;
+                padding: 0 1.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+            .page-header .heading-block h1 {
+                font-size: 2.2rem;
+                color: var(--dark-blue);
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+            }
+            .page-header .heading-block p {
+                color: var(--text-medium);
+                margin-top: 0.35rem;
+                font-size: 1rem;
+            }
+
+            .theme-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: var(--white);
+                border: 1px solid var(--border-color);
+                border-radius: 999px;
+                padding: 0.4rem 0.8rem;
+                box-shadow: var(--shadow-sm);
+                cursor: pointer;
+                white-space: nowrap;
+                font-size: 0.85rem;
+                color: var(--text-medium);
+                user-select: none;
+            }
+            .theme-toggle input {
+                accent-color: var(--primary-blue);
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
+
+            /* Sticky search bar */
+            .search-sticky {
+                position: sticky;
+                top: 0;
+                z-index: 500;
+                background: linear-gradient(135deg, var(--lighter-blue) 0%, var(--light-blue) 100%);
+                padding: 1.25rem 1.25rem 0.85rem;
+                box-shadow: 0 4px 14px rgba(74, 144, 226, 0.1);
+            }
+            .search-wrapper {
+                max-width: 900px;
+                margin: 0 auto;
+                position: relative;
+            }
+            .search-bar {
+                display: flex;
+                align-items: center;
+                background: var(--white);
+                border: 2px solid var(--border-color);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+                transition: border-color 0.2s, box-shadow 0.2s, border-radius 0.15s;
+            }
+            .search-bar:focus-within {
+                border-color: var(--primary-blue);
+                box-shadow: var(--shadow-md);
+            }
+            .search-bar.has-results {
+                border-radius: 12px 12px 0 0;
+            }
+            .search-bar .search-icon {
+                padding-left: 1rem;
+                color: var(--text-light);
+                display: flex;
+                align-items: center;
+            }
+            .search-bar input {
+                flex: 1;
+                border: none;
+                outline: none;
+                padding: 0.9rem 1.1rem;
+                font-size: 0.98rem;
+                font-family: "DM Sans", sans-serif;
+                color: var(--text-dark);
+                background: transparent;
+            }
+            .search-bar input::placeholder {
+                color: var(--text-light);
+            }
+            .search-bar button {
+                background: var(--primary-blue);
+                border: none;
+                color: white;
+                padding: 0.9rem 1.15rem;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: background 0.18s;
+                border-left: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .search-bar button:hover {
+                background: var(--dark-blue);
+            }
+
+            .search-meta-row {
+                max-width: 900px;
+                margin: 0.6rem auto 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 0.85rem;
+                color: var(--text-light);
+                min-height: 1.2rem;
+                padding: 0 0.15rem;
+            }
+            .search-meta-row .result-count {
+                font-weight: 600;
+                color: var(--primary-blue);
+            }
+
+            /* Category filter chips */
+            .chip-row {
+                max-width: 900px;
+                margin: 0.85rem auto 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .chip {
+                border: 1.5px solid var(--border-color);
+                background: var(--white);
+                color: var(--text-medium);
+                padding: 0.4rem 0.9rem;
+                border-radius: 999px;
+                font-size: 0.85rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .chip:hover {
+                border-color: var(--primary-blue);
+                color: var(--primary-blue);
+            }
+            .chip.active {
+                background: var(--primary-blue);
+                border-color: var(--primary-blue);
+                color: white;
+            }
+
+            /* Dropdown preview panel */
+            .search-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--white);
+                border: 2px solid var(--primary-blue);
+                border-top: none;
+                border-radius: 0 0 12px 12px;
+                box-shadow: var(--shadow-lg);
+                max-height: 380px;
+                overflow-y: auto;
+                display: none;
+                z-index: 501;
+            }
+            .search-dropdown.visible {
+                display: block;
+            }
+            .search-dropdown-empty {
+                padding: 1rem 1.1rem;
+                color: var(--text-light);
+                font-size: 0.92rem;
+            }
+            .search-result-item {
+                display: block;
+                width: 100%;
+                text-align: left;
+                background: none;
+                border: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 0.75rem 1.1rem;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+                transition: background 0.15s;
+            }
+            .search-result-item:last-child {
+                border-bottom: none;
+            }
+            .search-result-item:hover,
+            .search-result-item.highlighted {
+                background: var(--lighter-blue);
+            }
+            .search-result-section {
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                color: var(--primary-blue);
+                margin-bottom: 0.25rem;
+            }
+            .search-result-question {
+                font-size: 0.94rem;
+                font-weight: 700;
+                color: var(--text-dark);
+                margin-bottom: 0.2rem;
+            }
+            .search-result-snippet {
+                font-size: 0.88rem;
+                color: var(--text-medium);
+                line-height: 1.5;
+            }
+
+            mark.search-highlight {
+                background: #ffe066;
+                color: inherit;
+                border-radius: 3px;
+                padding: 0 2px;
+                font-weight: 700;
+            }
+            :root[data-theme="dark"] mark.search-highlight {
+                background: #8a6d00;
+                color: #fff3cd;
+            }
+            mark.search-highlight.active {
+                background: #ff9800;
+                color: white;
+            }
+
+            .item-hidden {
+                display: none !important;
+            }
+
+            /* Page container */
+            .container {
+                max-width: 900px;
+                margin: 1.5rem auto 0;
+                padding: 0 1.25rem 3rem;
+            }
+
+            .card {
+                scroll-margin-top: 210px;
+                background: var(--white);
+                border-radius: 16px;
+                box-shadow: var(--shadow-md);
+                border: 1px solid var(--border-color);
+                padding: 1.75rem 2rem;
+                margin-bottom: 1.75rem;
+            }
+
+            .note {
+                background: var(--light-blue);
+                border-left: 4px solid var(--primary-blue);
+                border-radius: 8px;
+                padding: 1.1rem 1.4rem;
+                color: var(--text-medium);
+                font-size: 0.95rem;
+            }
+            .note a {
+                color: var(--dark-blue);
+                font-weight: 600;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+            }
+
+            .section-title {
+                font-size: 1.55rem;
+                color: var(--dark-blue);
+                display: flex;
+                align-items: center;
+                gap: 0.65rem;
+                margin-bottom: 1.1rem;
+                padding-bottom: 0.6rem;
+                border-bottom: 2px solid var(--border-color);
+            }
+
+            /* FAQ accordion items */
+            .faq-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .faq-item {
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                overflow: hidden;
+                background: var(--lighter-blue);
+            }
+            .faq-question {
+                width: 100%;
+                background: none;
+                border: none;
+                text-align: left;
+                padding: 1rem 1.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+                font-weight: 700;
+                font-size: 1rem;
+                color: var(--text-dark);
+            }
+            .faq-question:hover {
+                color: var(--dark-blue);
+            }
+            .faq-question .chevron {
+                flex-shrink: 0;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--primary-blue);
+                transition: transform 0.2s ease;
+            }
+            .faq-item.open .faq-question .chevron {
+                transform: rotate(180deg);
+            }
+            .faq-answer-wrap {
+                display: grid;
+                grid-template-rows: 0fr;
+                transition: grid-template-rows 0.25s ease;
+            }
+            .faq-item.open .faq-answer-wrap {
+                grid-template-rows: 1fr;
+            }
+            .faq-answer-inner {
+                overflow: hidden;
+            }
+            .faq-answer {
+                padding: 0 1.25rem 1.1rem;
+                color: var(--text-medium);
+                font-size: 0.95rem;
+                line-height: 1.7;
+            }
+            .faq-answer b {
+                color: var(--text-dark);
+            }
+            .faq-answer ul {
+                margin: 0.5rem 0 0 1.2rem;
+            }
+            .faq-answer li {
+                margin-bottom: 0.3rem;
+            }
+
+            .no-results-msg {
+                text-align: center;
+                color: var(--text-light);
+                padding: 2.5rem 1rem;
+                font-size: 1rem;
+            }
+
+            footer {
+                background: var(--text-dark);
+                color: #a0aec0;
+                text-align: center;
+                padding: 2rem;
+                font-size: 0.9rem;
+            }
+            :root[data-theme="dark"] footer {
+                background: #0d1319;
+            }
+            footer a {
+                color: var(--accent-blue);
+                text-decoration: none;
+            }
+
+            @media (max-width: 640px) {
+                .page-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.75rem;
+                }
+                .page-header .heading-block h1 {
+                    font-size: 1.7rem;
+                }
+                .card {
+                    padding: 1.4rem 1.3rem;
+                }
+                .section-title {
+                    font-size: 1.3rem;
+                }
+                .faq-question {
+                    font-size: 0.94rem;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="page-header">
+            <div class="heading-block">
+                <h1>FAQ</h1>
+                <p>Answers to the questions we get asked the most on AllForOne SMP.</p>
+            </div>
+            <label class="theme-toggle" for="themeToggleInput">
+                <input type="checkbox" id="themeToggleInput" onchange="window.__setTheme(this.checked ? 'dark' : 'light')" />
+                <span id="themeToggleLabel">Dark mode</span>
+            </label>
+        </div>
+
+        <div class="search-sticky">
+            <div class="search-wrapper">
+                <div class="search-bar" id="searchBar">
+                    <span class="search-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" id="searchInput" placeholder="Search the FAQ... (try 'claim', 'pvp', 'discord')" autocomplete="off" />
+                    <button onclick="clearSearch()" title="Clear search">&#10005;</button>
+                </div>
+                <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
+            <div class="search-meta-row" id="searchMetaRow"></div>
+            <div class="chip-row" id="chipRow"></div>
+        </div>
+
+        <div class="container" id="mainContent">
+            <div class="card" id="card-getting-started">
+                <h2 class="section-title">Getting Started</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Getting Started">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>How do I join the AllForOne SMP?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Grab the server IP from our Discord's <b>#server-info</b> channel, add it to your Minecraft multiplayer list, and hop in. New players are asked to read the <b>Rules</b> page before building or trading with anyone.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Getting Started">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>What Minecraft version does the server run?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            We stay on the latest stable Java Edition release. If an update drops, check <b>#announcements</b> in Discord &mdash; we usually update within a few days once plugins catch up.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Getting Started">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Do I need to apply or whitelist before joining?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            No whitelist is required. The server is open &mdash; just connect using the IP and you're in.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-land-claims">
+                <h2 class="section-title">Land &amp; Claims</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Land & Claims">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>How do I claim land?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            If your base is within 100 blocks of spawn, mark the border with a fence so others know it's claimed. Further out, a clearly built perimeter or sign is enough. There's no in-game claim command &mdash; claims are honoured by community agreement and enforced by admins.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Land & Claims">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can someone build right next to my base?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Players should ask permission before building within 20 blocks of your base, and no one is allowed to box your claim in or block your ability to expand.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Land & Claims">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>What happens to my claim if I go inactive?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Claimed land that hasn't been touched in <b>30 days</b> can be removed and reset by admins for other players to use. Log in occasionally or let staff know if you'll be away for a while.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Land & Claims">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Is it ever okay to grief or steal?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Only if the land is genuinely <b>unclaimed</b>. Griefing or stealing from a claimed base is a rule violation and can lead to an IP ban.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-pvp-conflict">
+                <h2 class="section-title">PvP &amp; Conflict</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="PvP & Conflict">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can I just attack another player?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Only with explicit agreement from everyone involved. Unprovoked PvP, revenge attacks, or hitting someone just to annoy them isn't allowed.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="PvP & Conflict">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Someone is trespassing on my claim &mdash; can I fight them?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Yes, if they're griefing, stealing, or deliberately staying on your land for more than a minute without permission, you're allowed to defend your claim.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="PvP & Conflict">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>I hit someone by accident, am I in trouble?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Genuine accidents are fine. But if the accidental hit kills someone, breaks their armour, or keeps happening, it stops being accidental in the eyes of staff and punishments can apply.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-economy">
+                <h2 class="section-title">Economy &amp; Trading</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Economy & Trading">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>How do trades and shops work?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            There's no central server economy plugin &mdash; trading is player to player. All trades must be transparent, agreed upon by both sides, and shops need to display accurate pricing.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Economy & Trading">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>I paid someone for a build and they never delivered. What now?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            The builder is expected to make a reasonable effort to finish the job or refund you. If that doesn't happen, you can file an appeal (see <b>Disputes &amp; Appeals</b> below) and it'll be reviewed by staff or brought to the in-game courthouse.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Economy & Trading">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can I use a public farm freely?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Yes, but please restock it after you use it so the next player isn't left with nothing.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-technical">
+                <h2 class="section-title">Technical &amp; Farms</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Technical & Farms">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can I build a big redstone farm or AFK machine?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Small personal farms are fine as long as they're safe and don't lag the server. Anything running more than once every 20 ticks, or any farm larger than 50 blocks, needs <b>admin approval</b> first &mdash; otherwise it may be removed without compensation.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Technical & Farms">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Do redstone contraptions need anything special?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Yes &mdash; every contraption must have an accessible off switch so it can be shut down if it starts causing problems.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Technical & Farms">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Are hacked clients or X-ray allowed?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            No. Hacked clients, exploits, and X-ray are strictly prohibited and can result in an IP ban, especially if server stability is affected.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-conduct">
+                <h2 class="section-title">Conduct &amp; Community</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Conduct & Community">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Is swearing allowed in chat?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            No &mdash; swearing isn't permitted in chat or proximity voice/text communication. Keep it clean and respectful.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Conduct & Community">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can I log into a friend's account to help them out?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Only with the account holder's explicit permission. Otherwise, stick to your own Minecraft or offline account.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="card-appeals">
+                <h2 class="section-title">Disputes &amp; Appeals</h2>
+                <div class="faq-list">
+                    <div class="faq-item" data-category="Disputes & Appeals">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>I got punished and I think it was unfair. What can I do?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            You can file an appeal, and you'll get an in-game meeting at the courthouse with other players to review the situation.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Disputes & Appeals">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Should I record evidence for disputes?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Yes, it really helps. We recommend recording gameplay with <a href="https://www.microsoft.com/en-gb/windows/tips/game-bar" target="_blank" rel="noopener">Windows Game Bar</a>, <a href="https://screen-recorder.com/" target="_blank" rel="noopener">ScreenPal</a> (no download needed), or <a href="https://getsharex.com/downloads" target="_blank" rel="noopener">ShareX</a> so any dispute can be resolved quickly and fairly.
+                        </div></div></div>
+                    </div>
+                    <div class="faq-item" data-category="Disputes & Appeals">
+                        <button class="faq-question" onclick="toggleItem(this)">
+                            <span>Can admins remove my items or builds?</span>
+                            <span class="chevron">▾</span>
+                        </button>
+                        <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
+                            Admins can remove items suspected of being stolen, duplicated, or exploit-obtained, and can remove builds regardless of claim status. They can choose whether or not to return removed items.
+                        </div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note" style="margin-top: 0.5rem;">
+                Can't find your question here? Ask in <b>#help</b> on Discord or reach out to a staff member directly &mdash; and check the full <b>Rules</b> page for anything not covered above.
+            </div>
+
+            <div class="no-results-msg item-hidden" id="noResultsMsg">
+                No FAQ entries match your search. Try a different term, or ask in <b>#help</b> on Discord.
+            </div>
+        </div>
+
+        <footer>
+            <p>AllForOne SMP &mdash; contact staff with any questions or disputes.</p>
+        </footer>
+
+        <script>
+            const input = document.getElementById("searchInput");
+            const content = document.getElementById("mainContent");
+            const searchBar = document.getElementById("searchBar");
+            const dropdown = document.getElementById("searchDropdown");
+            const chipRow = document.getElementById("chipRow");
+            const searchMetaRow = document.getElementById("searchMetaRow");
+            const noResultsMsg = document.getElementById("noResultsMsg");
+
+            let activeCategory = "All";
+
+            // Build an index of every FAQ item: question + answer text.
+            function buildIndex() {
+                const items = [];
+                document.querySelectorAll(".faq-item").forEach((el) => {
+                    const qEl = el.querySelector(".faq-question span");
+                    const aEl = el.querySelector(".faq-answer");
+                    const question = qEl ? qEl.textContent.replace(/\s+/g, " ").trim() : "";
+                    const answer = aEl ? aEl.textContent.replace(/\s+/g, " ").trim() : "";
+                    const card = el.closest(".card");
+                    const titleEl = card ? card.querySelector(".section-title") : null;
+                    const section = titleEl ? titleEl.textContent.replace(/\s+/g, " ").trim() : "FAQ";
+                    items.push({
+                        el,
+                        card,
+                        category: el.dataset.category || "General",
+                        section,
+                        question,
+                        answer,
+                        combined: question + " " + answer,
+                    });
+                });
+                return items;
+            }
+
+            const index = buildIndex();
+
+            // Build category chips dynamically from data-category attributes.
+            function buildChips() {
+                const categories = ["All", ...new Set(index.map((i) => i.category))];
+                chipRow.innerHTML = "";
+                categories.forEach((cat) => {
+                    const chip = document.createElement("button");
+                    chip.type = "button";
+                    chip.className = "chip" + (cat === activeCategory ? " active" : "");
+                    chip.textContent = cat;
+                    chip.addEventListener("click", () => {
+                        activeCategory = cat;
+                        Array.from(chipRow.children).forEach((c) => c.classList.remove("active"));
+                        chip.classList.add("active");
+                        applyFilters();
+                    });
+                    chipRow.appendChild(chip);
+                });
+            }
+            buildChips();
+
+            input.addEventListener("input", applyFilters);
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") clearSearch();
+            });
+            document.addEventListener("click", (e) => {
+                if (!searchBar.contains(e.target) && !dropdown.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+
+            function applyFilters() {
+                const query = input.value.trim();
+                const re = query ? new RegExp(escapeRe(query), "gi") : null;
+
+                // Clear any prior in-page highlights.
+                index.forEach((item) => resetHighlight(item.el));
+
+                let visibleCount = 0;
+                index.forEach((item) => {
+                    const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+                    const matchesQuery = !query || re.test(item.combined);
+                    re && (re.lastIndex = 0);
+
+                    const visible = matchesCategory && matchesQuery;
+                    item.el.classList.toggle("item-hidden", !visible);
+                    if (visible) {
+                        visibleCount++;
+                        if (query) highlightInNode(item.el.querySelector(".faq-question"), query);
+                        if (query) highlightInNode(item.el.querySelector(".faq-answer"), query);
+                    }
+                });
+
+                // Hide/show cards with zero visible items.
+                document.querySelectorAll(".card").forEach((card) => {
+                    const hasVisible = card.querySelector(".faq-item:not(.item-hidden)");
+                    card.classList.toggle("item-hidden", !hasVisible && card.querySelectorAll(".faq-item").length > 0);
+                });
+
+                noResultsMsg.classList.toggle("item-hidden", visibleCount > 0);
+
+                if (query) {
+                    const results = index.filter((item) => {
+                        const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+                        const m = new RegExp(escapeRe(query), "gi").test(item.combined);
+                        return matchesCategory && m;
+                    });
+                    renderDropdown(results, query);
+                    searchMetaRow.innerHTML = `<span class="result-count">${visibleCount}</span>&nbsp;result${visibleCount === 1 ? "" : "s"} for "${escapeHtml(query)}"`;
+                } else {
+                    closeDropdown();
+                    searchMetaRow.innerHTML = "";
+                }
+            }
+
+            function renderDropdown(results, query) {
+                dropdown.innerHTML = "";
+
+                if (results.length === 0) {
+                    const empty = document.createElement("div");
+                    empty.className = "search-dropdown-empty";
+                    empty.textContent = "No results found.";
+                    dropdown.appendChild(empty);
+                } else {
+                    results.slice(0, 10).forEach((result) => {
+                        const item = document.createElement("button");
+                        item.type = "button";
+                        item.className = "search-result-item";
+
+                        const sectionLabel = document.createElement("div");
+                        sectionLabel.className = "search-result-section";
+                        sectionLabel.textContent = result.section;
+
+                        const questionLabel = document.createElement("div");
+                        questionLabel.className = "search-result-question";
+                        questionLabel.innerHTML = buildSnippet(result.question, query, 100);
+
+                        const snippet = document.createElement("div");
+                        snippet.className = "search-result-snippet";
+                        snippet.innerHTML = buildSnippet(result.answer, query, 130);
+
+                        item.appendChild(sectionLabel);
+                        item.appendChild(questionLabel);
+                        item.appendChild(snippet);
+
+                        item.addEventListener("click", () => {
+                            closeDropdown();
+                            jumpToItem(result);
+                        });
+
+                        dropdown.appendChild(item);
+                    });
+                }
+
+                dropdown.classList.add("visible");
+                searchBar.classList.add("has-results");
+            }
+
+            function buildSnippet(text, query, maxLen) {
+                if (!text) return "";
+                const re = new RegExp(escapeRe(query), "gi");
+                const idx = text.search(re);
+                let snippet = text;
+                if (idx > 40) {
+                    snippet = "..." + text.slice(idx - 30);
+                }
+                if (snippet.length > maxLen) {
+                    snippet = snippet.slice(0, maxLen) + "...";
+                }
+                return snippet.replace(re, (m) => `<mark class="search-highlight">${m}</mark>`);
+            }
+
+            function jumpToItem(result) {
+                // Make sure the item's card/category is visible even if a different chip was active.
+                if (activeCategory !== "All" && result.category !== activeCategory) {
+                    activeCategory = "All";
+                    Array.from(chipRow.children).forEach((c) => c.classList.toggle("active", c.textContent === "All"));
+                    applyFilters();
+                }
+
+                result.el.classList.remove("item-hidden");
+                result.card.classList.remove("item-hidden");
+                result.el.classList.add("open");
+
+                const marks = result.el.querySelectorAll("mark.search-highlight");
+                marks.forEach((m) => m.classList.add("active"));
+
+                result.el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+
+            function toggleItem(btn) {
+                const item = btn.closest(".faq-item");
+                item.classList.toggle("open");
+            }
+
+            function resetHighlight(el) {
+                el.querySelectorAll("mark.search-highlight").forEach((mark) => {
+                    const text = document.createTextNode(mark.textContent);
+                    mark.parentNode.replaceChild(text, mark);
+                });
+                // Normalize adjacent text nodes back together.
+                el.querySelectorAll(".faq-question, .faq-answer").forEach((n) => n.normalize && n.normalize());
+                el.normalize();
+            }
+
+            function highlightInNode(node, query) {
+                if (!node) return;
+                const re = new RegExp(escapeRe(query), "gi");
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const text = node.textContent;
+                    if (re.test(text)) {
+                        const frag = document.createDocumentFragment();
+                        let last = 0;
+                        re.lastIndex = 0;
+                        let m;
+                        while ((m = re.exec(text)) !== null) {
+                            frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+                            const mark = document.createElement("mark");
+                            mark.className = "search-highlight";
+                            mark.textContent = m[0];
+                            frag.appendChild(mark);
+                            last = re.lastIndex;
+                        }
+                        frag.appendChild(document.createTextNode(text.slice(last)));
+                        node.parentNode.replaceChild(frag, node);
+                    }
+                } else if (
+                    node.nodeType === Node.ELEMENT_NODE &&
+                    node.tagName !== "SCRIPT" &&
+                    node.tagName !== "STYLE"
+                ) {
+                    Array.from(node.childNodes).forEach((child) => highlightInNode(child, query));
+                }
+            }
+
+            function closeDropdown() {
+                dropdown.classList.remove("visible");
+                searchBar.classList.remove("has-results");
+            }
+
+            function clearSearch() {
+                input.value = "";
+                applyFilters();
+                closeDropdown();
+                input.focus();
+            }
+
+            function escapeRe(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            }
+
+            function escapeHtml(str) {
+                return str.replace(/[&<>"']/g, (c) => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+                }[c]));
+            }
+        </script>
+    </body>
+</html>
