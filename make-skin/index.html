@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AllForOne SMP | Skin Upload</title>
+        <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/logo.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
+            rel="stylesheet" />
+
+        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <script>
+            (function () {
+                var STORAGE_KEY = "afo_theme";
+                function getStored() {
+                    try {
+                        return localStorage.getItem(STORAGE_KEY);
+                    } catch (_) {
+                        return null;
+                    }
+                }
+                function setStored(v) {
+                    try {
+                        localStorage.setItem(STORAGE_KEY, v);
+                    } catch (_) {}
+                }
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+                }
+                window.__setTheme = function (theme) {
+                    setStored(theme);
+                    apply(theme);
+                };
+                apply(getStored() || "light");
+                document.addEventListener("DOMContentLoaded", function () {
+                    apply(getStored() || "light");
+                });
+                window.addEventListener("message", function (e) {
+                    if (e.data && e.data.type === "afo-theme") {
+                        setStored(e.data.theme);
+                        apply(e.data.theme);
+                    }
+                });
+            })();
+        </script>
+
+        <style>
+            :root {
+                --primary-blue: #4a90e2;
+                --light-blue: #e8f4f8;
+                --lighter-blue: #f5fbfd;
+                --dark-blue: #2c5f8d;
+                --accent-blue: #5ba3f5;
+                --text-dark: #1a2332;
+                --text-medium: #4a5568;
+                --text-light: #718096;
+                --border-color: #d4e8f0;
+                --white: #ffffff;
+                --error: #e74c3c;
+                --success: #27ae60;
+                --shadow-sm: 0 1px 3px rgba(74, 144, 226, 0.08);
+                --shadow-md: 0 4px 12px rgba(74, 144, 226, 0.12);
+                --shadow-lg: 0 10px 30px rgba(74, 144, 226, 0.15);
+            }
+
+            :root[data-theme="dark"] {
+                --primary-blue: #5ba3f5;
+                --light-blue: #1e2a38;
+                --lighter-blue: #141c26;
+                --dark-blue: #7db8f8;
+                --accent-blue: #5ba3f5;
+                --text-dark: #eef2f7;
+                --text-medium: #b7c2cf;
+                --text-light: #8a97a6;
+                --border-color: #2c3b4a;
+                --white: #1a232e;
+                --error: #ff6b5b;
+                --success: #3ecf7e;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+
+            html {
+                transition: background-color 0.25s ease;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "DM Sans", sans-serif;
+                background: linear-gradient(135deg, var(--lighter-blue) 0%, var(--light-blue) 100%);
+                color: var(--text-dark);
+                min-height: 100vh;
+                line-height: 1.6;
+                transition:
+                    background-color 0.25s ease,
+                    color 0.25s ease;
+            }
+            h1,
+            h2,
+            h3,
+            h4 {
+                font-family: "Spectral", serif;
+                font-weight: 700;
+            }
+
+            .card,
+            input,
+            textarea,
+            select,
+            .upload-zone,
+            .toast,
+            .skin-type-btn,
+            .command-box,
+            .step-pill {
+                transition:
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease,
+                    box-shadow 0.2s ease;
+            }
+
+            .page-layout {
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .intro {
+                text-align: center;
+            }
+            .intro h1 {
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 2.4rem;
+                letter-spacing: 0.06em;
+                color: var(--primary-blue);
+                margin-bottom: 0.5rem;
+            }
+            .intro p {
+                color: var(--text-medium);
+                max-width: 480px;
+                margin: 0 auto;
+            }
+
+            .card {
+                background: var(--white);
+                border-radius: 16px;
+                padding: 2rem;
+                box-shadow: var(--shadow-md);
+                border: 1px solid var(--border-color);
+            }
+
+            .step-pill {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: var(--primary-blue);
+                color: white;
+                font-size: 0.8rem;
+                font-weight: 700;
+                margin-right: 0.6rem;
+                flex-shrink: 0;
+            }
+            .step-heading {
+                display: flex;
+                align-items: center;
+                font-size: 1.1rem;
+                color: var(--text-dark);
+                margin-bottom: 1.1rem;
+            }
+            .step-heading.disabled {
+                color: var(--text-light);
+            }
+            .step-heading.disabled .step-pill {
+                background: var(--border-color);
+                color: var(--text-light);
+            }
+
+            .form-group {
+                margin-bottom: 1.1rem;
+            }
+            label {
+                display: block;
+                margin-bottom: 0.4rem;
+                font-weight: 500;
+                font-size: 0.9rem;
+                color: var(--text-dark);
+            }
+            input[type="text"] {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border: 2px solid var(--border-color);
+                border-radius: 10px;
+                font-size: 0.95rem;
+                font-family: "DM Sans", sans-serif;
+                background: var(--lighter-blue);
+                color: var(--text-dark);
+            }
+            input:focus {
+                outline: none;
+                border-color: var(--primary-blue);
+                background: var(--white);
+            }
+
+            .btn {
+                padding: 0.75rem 1.5rem;
+                border: none;
+                border-radius: 10px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+                transition: all 0.2s;
+            }
+            .btn-primary {
+                background: var(--primary-blue);
+                color: white;
+            }
+            .btn-primary:hover:not(:disabled) {
+                background: var(--dark-blue);
+                transform: translateY(-1px);
+            }
+            .btn-primary:disabled {
+                background: #a9c8ea;
+                cursor: default;
+                transform: none;
+            }
+            .btn-outline {
+                background: var(--white);
+                color: var(--primary-blue);
+                border: 2px solid var(--border-color);
+            }
+            .btn-outline:hover {
+                border-color: var(--primary-blue);
+                background: var(--lighter-blue);
+            }
+
+            /* Upload zone */
+            .upload-zone {
+                border: 2px dashed var(--border-color);
+                border-radius: 12px;
+                padding: 2.25rem 1.5rem;
+                text-align: center;
+                background: var(--lighter-blue);
+                cursor: pointer;
+            }
+            .upload-zone:hover {
+                border-color: var(--primary-blue);
+                background: var(--light-blue);
+            }
+            .upload-zone p {
+                color: var(--text-medium);
+                margin-bottom: 0.3rem;
+                font-weight: 500;
+            }
+            .upload-zone small {
+                color: var(--text-light);
+            }
+            .upload-zone.has-file {
+                cursor: default;
+                padding: 1.25rem;
+            }
+
+            .skin-preview-row {
+                display: flex;
+                align-items: center;
+                gap: 1.25rem;
+            }
+            .skin-preview-canvas-wrap {
+                background: repeating-conic-gradient(var(--lighter-blue) 0% 25%, var(--light-blue) 0% 50%) 50% / 16px
+                    16px;
+                border: 2px solid var(--border-color);
+                border-radius: 10px;
+                padding: 0.5rem;
+                flex-shrink: 0;
+            }
+            #skinCanvas {
+                display: block;
+                image-rendering: pixelated;
+                width: 96px;
+                height: 96px;
+            }
+            .skin-preview-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .skin-preview-info .fname {
+                font-weight: 600;
+                color: var(--text-dark);
+                font-size: 0.95rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .skin-preview-info .fdims {
+                color: var(--text-light);
+                font-size: 0.85rem;
+                margin-top: 0.2rem;
+            }
+            .change-file-link {
+                background: none;
+                border: none;
+                color: var(--primary-blue);
+                font-weight: 600;
+                font-size: 0.85rem;
+                cursor: pointer;
+                padding: 0;
+                margin-top: 0.5rem;
+                font-family: "DM Sans", sans-serif;
+            }
+            .change-file-link:hover {
+                text-decoration: underline;
+            }
+
+            .skin-type-choices {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+            @media (max-width: 520px) {
+                .skin-type-choices {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .skin-type-btn {
+                border: 2px solid var(--border-color);
+                background: var(--lighter-blue);
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: left;
+                cursor: pointer;
+                font-family: "DM Sans", sans-serif;
+            }
+            .skin-type-btn:hover {
+                border-color: var(--accent-blue);
+            }
+            .skin-type-btn.selected {
+                border-color: var(--primary-blue);
+                background: var(--light-blue);
+            }
+            .skin-type-btn strong {
+                display: block;
+                color: var(--text-dark);
+                font-size: 0.95rem;
+                margin-bottom: 0.2rem;
+            }
+            .skin-type-btn span {
+                color: var(--text-medium);
+                font-size: 0.82rem;
+            }
+
+            .progress-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+            .spinner {
+                border: 3px solid var(--light-blue);
+                border-top: 3px solid var(--primary-blue);
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                animation: spin 1s linear infinite;
+                flex-shrink: 0;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            .progress-row span {
+                color: var(--text-medium);
+                font-size: 0.9rem;
+            }
+
+            .command-box {
+                background: var(--text-dark);
+                color: #d6f0ff;
+                border-radius: 10px;
+                padding: 1rem 1.15rem;
+                font-family: "DM Sans", monospace;
+                font-size: 0.9rem;
+                word-break: break-all;
+                position: relative;
+                border: 1px solid var(--border-color);
+            }
+            :root[data-theme="dark"] .command-box {
+                background: #0b1119;
+            }
+            .command-actions {
+                display: flex;
+                gap: 0.6rem;
+                margin-top: 0.9rem;
+                flex-wrap: wrap;
+            }
+
+            .hint {
+                font-size: 0.82rem;
+                color: var(--text-light);
+                margin-top: 0.3rem;
+            }
+            .error-text {
+                color: var(--error);
+                font-size: 0.85rem;
+                margin-top: 0.5rem;
+                display: none;
+            }
+            .divider {
+                border: none;
+                border-top: 1px solid var(--border-color);
+                margin: 1.5rem 0;
+            }
+
+            .toast {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                left: 2rem;
+                max-width: 380px;
+                margin-left: auto;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                color: white;
+                font-weight: 500;
+                font-size: 0.95rem;
+                box-shadow: var(--shadow-lg);
+                z-index: 9999;
+                animation: slideInRight 0.4s ease;
+                display: none;
+            }
+            .toast.success {
+                background: var(--success);
+            }
+            .toast.error {
+                background: var(--error);
+            }
+            @keyframes slideInRight {
+                from {
+                    opacity: 0;
+                    transform: translateX(60px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            @media (max-width: 768px) {
+                .page-layout {
+                    padding: 1.25rem;
+                    gap: 1.5rem;
+                }
+                .card {
+                    padding: 1.25rem;
+                }
+                .intro h1 {
+                    font-size: 2rem;
+                }
+                .toast {
+                    right: 1rem;
+                    left: 1rem;
+                    bottom: 1rem;
+                    max-width: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-layout">
+            <div class="intro">
+                <h1>Set Your Skin</h1>
+                <p>Upload a skin file, tell us the model, and we'll give you the exact command to type in-game.</p>
+            </div>
+
+            <!-- STEP 1: UPLOAD -->
+            <div class="card">
+                <div class="step-heading">
+                    <span class="step-pill">1</span>
+                    Upload your skin
+                </div>
+
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('skinFileInput').click()">
+                    <p>Click to upload a skin file</p>
+                    <small>Must be a .png — typically 64×64 or 64×32</small>
+                </div>
+                <input type="file" id="skinFileInput" accept=".png,image/png" style="display: none" onchange="handleFileSelect(event)" />
+
+                <div id="skinPreviewWrap" style="display: none">
+                    <div class="skin-preview-row">
+                        <div class="skin-preview-canvas-wrap">
+                            <canvas id="skinCanvas" width="64" height="64"></canvas>
+                        </div>
+                        <div class="skin-preview-info">
+                            <div class="fname" id="skinFileName"></div>
+                            <div class="fdims" id="skinFileDims"></div>
+                            <button class="change-file-link" onclick="document.getElementById('skinFileInput').click()">
+                                Choose a different file
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-text" id="fileError"></div>
+            </div>
+
+            <!-- STEP 2: SKIN TYPE -->
+            <div class="card">
+                <div class="step-heading" id="step2Heading">
+                    <span class="step-pill">2</span>
+                    Choose your skin model
+                </div>
+
+                <div class="skin-type-choices">
+                    <button class="skin-type-btn" id="classicBtn" onclick="selectSkinType('classic')">
+                        <strong>Classic</strong>
+                        <span>Regular arm width (Steve model)</span>
+                    </button>
+                    <button class="skin-type-btn" id="slimBtn" onclick="selectSkinType('slim')">
+                        <strong>Slim</strong>
+                        <span>Narrow arm width (Alex model)</span>
+                    </button>
+                </div>
+                <p class="hint">Not sure? Most skins downloaded without saying "slim" are Classic.</p>
+            </div>
+
+            <!-- STEP 3: SUBMIT -->
+            <div class="card">
+                <div class="step-heading" id="step3Heading">
+                    <span class="step-pill">3</span>
+                    Upload your skin
+                </div>
+
+                <button class="btn btn-primary" id="uploadBtn" onclick="uploadSkin()" disabled>Upload &amp; Get Command</button>
+
+                <div class="progress-row" id="progressRow" style="display: none">
+                    <div class="spinner"></div>
+                    <span>Uploading your skin…</span>
+                </div>
+            </div>
+
+            <!-- STEP 4: RESULT -->
+            <div class="card" id="resultCard" style="display: none">
+                <div class="step-heading">
+                    <span class="step-pill">✓</span>
+                    Type this command in-game
+                </div>
+                <div class="command-box" id="commandBox"></div>
+                <div class="command-actions">
+                    <button class="btn btn-outline" onclick="copyCommand()">Copy Command</button>
+                    <button class="btn btn-outline" onclick="startOver()">Upload Another Skin</button>
+                </div>
+                <p class="hint" style="margin-top: 1rem">
+                    Paste this straight into the Minecraft chat box on the server and press Enter.
+                </p>
+            </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <script>
+            const CLOUDINARY_CLOUD_NAME = "dgrmpcha9";
+            const CLOUDINARY_UPLOAD_PRESET = "AllForOne Posts";
+
+            let selectedFile = null;
+            let selectedSkinType = null;
+
+            function showToast(msg, type = "success") {
+                const t = document.getElementById("toast");
+                t.textContent = msg;
+                t.className = "toast " + type;
+                t.style.display = "block";
+                setTimeout(() => {
+                    t.style.display = "none";
+                }, 3500);
+            }
+
+            function showFileError(msg) {
+                const el = document.getElementById("fileError");
+                if (!msg) {
+                    el.style.display = "none";
+                    el.textContent = "";
+                    return;
+                }
+                el.textContent = msg;
+                el.style.display = "block";
+            }
+
+            function updateUploadButtonState() {
+                document.getElementById("uploadBtn").disabled = !(selectedFile && selectedSkinType);
+            }
+
+            window.handleFileSelect = function (e) {
+                const file = e.target.files[0];
+                e.target.value = "";
+                if (!file) return;
+                showFileError(null);
+
+                if (!/\.png$/i.test(file.name) && file.type !== "image/png") {
+                    showFileError("That's not a .png file. Please select a PNG skin file.");
+                    return;
+                }
+
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.onload = () => {
+                    const w = img.naturalWidth;
+                    const h = img.naturalHeight;
+                    const validDims =
+                        (w === 64 && (h === 64 || h === 32)) || (w === h && w >= 64) || (w === h * 2 && w >= 64);
+
+                    if (!validDims) {
+                        showFileError(
+                            `This image is ${w}×${h}. Minecraft skins are usually 64×64 (or the legacy 64×32). Double check this is a real skin file before continuing.`
+                        );
+                    }
+
+                    selectedFile = file;
+                    drawSkinPreview(img, w, h);
+
+                    document.getElementById("skinFileName").textContent = file.name;
+                    document.getElementById("skinFileDims").textContent = `${w} × ${h}px`;
+                    document.getElementById("skinPreviewWrap").style.display = "block";
+                    document.getElementById("uploadZone").classList.add("has-file");
+                    document.getElementById("uploadZone").querySelector("p").textContent = "Skin selected";
+                    document.getElementById("uploadZone").querySelector("small").textContent =
+                        "Click to upload a different file";
+
+                    updateUploadButtonState();
+                    URL.revokeObjectURL(objectUrl);
+                };
+                img.onerror = () => {
+                    showFileError("Couldn't read that image. Please try a different PNG file.");
+                    URL.revokeObjectURL(objectUrl);
+                };
+                img.src = objectUrl;
+            };
+
+            function drawSkinPreview(img, w, h) {
+                const canvas = document.getElementById("skinCanvas");
+                const ctx = canvas.getContext("2d");
+                ctx.imageSmoothingEnabled = false;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Draw the face (front head) region, standard skin layout: head at 8,8 sized 8x8
+                if (w >= 64 && h >= 32) {
+                    const scaleX = w / 64;
+                    const scaleY = h / 64 >= 0.5 ? h / 32 : h / 64;
+                    ctx.drawImage(img, 8 * scaleX, 8 * scaleX, 8 * scaleX, 8 * scaleX, 0, 0, 64, 64);
+                } else {
+                    ctx.drawImage(img, 0, 0, w, h, 0, 0, 64, 64);
+                }
+            }
+
+            window.selectSkinType = function (type) {
+                selectedSkinType = type;
+                document.getElementById("classicBtn").classList.toggle("selected", type === "classic");
+                document.getElementById("slimBtn").classList.toggle("selected", type === "slim");
+                updateUploadButtonState();
+            };
+
+            async function uploadToCloudinary(file) {
+                const fd = new FormData();
+                fd.append("file", file);
+                fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: "POST",
+                    body: fd
+                });
+                const data = await res.json();
+                if (!data.secure_url) throw new Error(data.error?.message || "Cloudinary upload failed");
+                return data.secure_url;
+            }
+
+            window.uploadSkin = async function () {
+                if (!selectedFile || !selectedSkinType) {
+                    showToast("Please complete all three steps first.", "error");
+                    return;
+                }
+
+                const btn = document.getElementById("uploadBtn");
+                btn.disabled = true;
+                document.getElementById("progressRow").style.display = "flex";
+
+                try {
+                    const url = await uploadToCloudinary(selectedFile);
+                    const command = `/skin set web ${selectedSkinType} "${url}"`;
+
+                    document.getElementById("commandBox").textContent = command;
+                    document.getElementById("resultCard").style.display = "block";
+                    document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+                    showToast("Skin uploaded! Copy the command below.", "success");
+                } catch (e) {
+                    showToast("Upload failed: " + e.message, "error");
+                    btn.disabled = false;
+                }
+                document.getElementById("progressRow").style.display = "none";
+            };
+
+            window.copyCommand = function () {
+                const text = document.getElementById("commandBox").textContent;
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => showToast("Command copied to clipboard.", "success"))
+                    .catch(() => showToast("Could not copy — please select and copy manually.", "error"));
+            };
+
+            window.startOver = function () {
+                selectedFile = null;
+                selectedSkinType = null;
+                document.getElementById("skinPreviewWrap").style.display = "none";
+                document.getElementById("uploadZone").classList.remove("has-file");
+                document.getElementById("uploadZone").querySelector("p").textContent = "Click to upload a skin file";
+                document.getElementById("uploadZone").querySelector("small").textContent =
+                    "Must be a .png — typically 64×64 or 64×32";
+                document.getElementById("classicBtn").classList.remove("selected");
+                document.getElementById("slimBtn").classList.remove("selected");
+                document.getElementById("resultCard").style.display = "none";
+                document.getElementById("uploadBtn").disabled = true;
+                showFileError(null);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            };
+        </script>
+    </body>
+</html>
