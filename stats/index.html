@@ -657,6 +657,7 @@
         <!-- Same source the homepage's status pill uses — this is the actual game-server state, -->
         <!-- separate from the "Reporting Live/Offline" pill above, which reflects this page's own -->
         <!-- self-hosted reporter/API pipeline health. -->
+        <!-- NOTE: this project (allforonemedia-9a7d8) is intentionally left as-is per request. -->
         <script type="module">
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
             import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -713,9 +714,10 @@
                 label.textContent = s.text;
 
                 if (displayState === "online") {
-                    const count = liveServerData.playersOnline || 0;
-                    const names = liveServerData.playerList || [];
-                    meta.textContent = count > 0 ? `${count} online: ${names.join(", ")}` : "No players online";
+                    const rawNames = liveServerData.playerList || [];
+                    const visibleNames = window.__applyHiddenPlayers ? window.__applyHiddenPlayers(rawNames) : rawNames;
+                    const count = visibleNames.length;
+                    meta.textContent = count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
                 } else {
                     meta.textContent = "—";
                 }
@@ -733,7 +735,46 @@
                 serverStatusRecheckInterval = setInterval(renderServerStatusPill, SERVER_STATUS_RECHECK_MS);
             }
 
+            // Re-render this pill whenever the hidden-players list (loaded from the
+            // allforone-stats project below) changes, so filtering applies immediately.
+            window.addEventListener("afo-hidden-players-updated", renderServerStatusPill);
+
             loadLiveServerStatus();
+        </script>
+
+        <!-- Firebase: hidden-players list, read from the SAME project the admin panel and -->
+        <!-- home page use (allforone-stats). This is separate from the live-server-state -->
+        <!-- listener above, which intentionally stays on the allforonemedia-9a7d8 project. -->
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+            const hiddenPlayersFirebaseConfig = {
+                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
+                authDomain: "allforone-stats.firebaseapp.com",
+                projectId: "allforone-stats",
+                storageBucket: "allforone-stats.firebasestorage.app",
+                messagingSenderId: "235057820326",
+                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
+            };
+
+            const hpApp = initializeApp(hiddenPlayersFirebaseConfig, "hiddenPlayersApp");
+            const hpDb = getFirestore(hpApp);
+
+            let hiddenPlayersSet = new Set();
+
+            // Exposed globally so both the live-server-state pill above and the
+            // main stats script below can filter player names/counts consistently.
+            window.__applyHiddenPlayers = function (names) {
+                if (!Array.isArray(names) || names.length === 0) return [];
+                return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
+            };
+
+            onSnapshot(doc(hpDb, "serverInfo", "main"), (snap) => {
+                const hp = snap.exists() && Array.isArray(snap.data().hiddenPlayers) ? snap.data().hiddenPlayers : [];
+                hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
+                window.dispatchEvent(new Event("afo-hidden-players-updated"));
+            });
         </script>
 
         <script>
@@ -753,6 +794,7 @@
                 let charts = { cpu: null, ram: null, net: null, players: null };
                 let historyRequestSeq = 0; // guards against a slow older request overwriting a newer one
                 let lastHistoryRows = []; // cached so we can redraw charts on a theme change without refetching
+                let lastLatestData = null; // cached so we can re-render player info when the hidden list changes
 
                 // ---------------------------------------------------------------------
                 // THEME-AWARE CHART COLORS
@@ -768,6 +810,17 @@
                 window.__refreshChartsForTheme = function () {
                     renderHistory(lastHistoryRows);
                 };
+
+                // Re-render "latest" player info and the players chart whenever the
+                // hidden-players list changes, without waiting for the next poll.
+                window.addEventListener("afo-hidden-players-updated", function () {
+                    if (lastLatestData) renderLatest(lastLatestData);
+                    renderHistory(lastHistoryRows);
+                });
+
+                function applyHiddenPlayers(names) {
+                    return window.__applyHiddenPlayers ? window.__applyHiddenPlayers(names) : names || [];
+                }
 
                 // ---------------------------------------------------------------------
                 // HELPERS
@@ -817,6 +870,8 @@
                 // RENDER: current stats
                 // ---------------------------------------------------------------------
                 function renderLatest(data) {
+                    lastLatestData = data;
+
                     // uptime: API sends uptime.systemSeconds / uptime.serviceSeconds
                     const uptimeSec = data.uptime?.systemSeconds ?? data.uptime?.serviceSeconds ?? null;
                     document.getElementById("uptimeValue").textContent = formatUptime(uptimeSec);
@@ -840,27 +895,28 @@
                             `${mem.usedGB.toFixed(1)} GB / ${mem.totalGB.toFixed(1)} GB`;
                     }
 
-                    // players: shape unchanged
+                    // players: filter out hidden usernames from both the list and the count
                     const players = data.players || {};
-                    const count = players.count;
+                    const rawNames = players.names;
+                    const visibleNames = rawNames == null ? null : applyHiddenPlayers(rawNames);
+                    const count = visibleNames == null ? players.count : visibleNames.length;
                     const max = players.max; // not present in current payload; stays undefined, which is fine
                     document.getElementById("playersValue").innerHTML =
                         (count == null ? "—" : count) + (max != null ? `<span class="unit">/${max}</span>` : "");
                     document.getElementById("playersCountBadge").textContent = count == null ? "?" : count;
 
-                    const names = players.names;
                     const chipList = document.getElementById("playerChipList");
-                    if (names == null) {
+                    if (visibleNames == null) {
                         document.getElementById("playersSub").textContent = "Player data unavailable";
                         chipList.innerHTML =
                             '<span class="players-empty">Player data is temporarily unavailable.</span>';
-                    } else if (names.length === 0) {
+                    } else if (visibleNames.length === 0) {
                         document.getElementById("playersSub").textContent = "0 players exploring the world";
                         chipList.innerHTML = '<span class="players-empty">No players online right now.</span>';
                     } else {
                         document.getElementById("playersSub").textContent =
-                            `${names.length} player${names.length === 1 ? "" : "s"} exploring the world`;
-                        chipList.innerHTML = names
+                            `${visibleNames.length} player${visibleNames.length === 1 ? "" : "s"} exploring the world`;
+                        chipList.innerHTML = visibleNames
                             .map((n) => `<span class="player-chip"><span class="dot"></span>${escapeHtml(n)}</span>`)
                             .join("");
                     }
@@ -965,6 +1021,10 @@
                         "netEmpty"
                     );
 
+                    // players: recompute count per history row using the current hidden-players
+                    // list. History rows only store a count (not names), so if any hidden
+                    // players happen to be in the raw count we can't subtract them out
+                    // retroactively — this affects the live figures above, which do have names.
                     const playerData = rows
                         .filter((r) => r.players && r.players.count != null)
                         .map((r) => ({ x: r.ts, y: r.players.count }));
