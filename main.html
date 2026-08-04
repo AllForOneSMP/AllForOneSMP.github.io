@@ -1645,11 +1645,26 @@
                 });
             }
 
+            // ─── HIDDEN PLAYERS ─────────────────────────────────────────
+            // Usernames set here (from the admin panel) never appear as "online" in
+            // the status pill below — for anyone viewing this page. Matching is
+            // case-insensitive. This purely affects display; it does not affect
+            // who can actually join or play.
+            let hiddenPlayersSet = new Set();
+            function applyHiddenPlayers(names) {
+                if (!Array.isArray(names) || names.length === 0) return [];
+                return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
+            }
+
             // ─── JOIN CODE & SERVER INFO ────────────────────────────────
             async function loadServerInfo() {
                 onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
                     if (!snap.exists()) return;
                     serverData = snap.data();
+
+                    // Keep the hidden-players set current so the status pill can filter live.
+                    const hp = Array.isArray(serverData.hiddenPlayers) ? serverData.hiddenPlayers : [];
+                    hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
 
                     // Server IP: hide the whole box if the value is empty
                     const ipBox = document.getElementById("serverIpBox");
@@ -1668,6 +1683,11 @@
 
                     renderNotifBanner(serverData.notifBanner || null);
                     renderInfoCard(serverData.infoMessage || null);
+
+                    // Hidden-players list can change independently of the live status
+                    // heartbeat, so re-render the pill immediately using the last known
+                    // live data whenever it updates.
+                    renderStatusPill();
                 });
             }
 
@@ -1840,9 +1860,10 @@
                 label.textContent = s.text;
 
                 if (displayState === "online") {
-                    const count = liveStatusData.playersOnline || 0;
-                    const names = liveStatusData.playerList || [];
-                    playersEl.textContent = count > 0 ? `${count} online: ${names.join(", ")}` : "No players online";
+                    const rawNames = liveStatusData.playerList || [];
+                    const visibleNames = applyHiddenPlayers(rawNames);
+                    const count = visibleNames.length;
+                    playersEl.textContent = count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
                 } else {
                     playersEl.textContent = "";
                 }
