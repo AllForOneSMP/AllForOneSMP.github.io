@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spectral:wght@600;700&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        <!-- ── THEME (dark/light) — synced with the site shell via localStorage + postMessage ── -->
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -23,22 +23,17 @@
                 }
                 function apply(theme) {
                     document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
-                    var input = document.getElementById("themeToggleInput");
-                    if (input) input.checked = theme === "dark";
                 }
                 window.__setTheme = function (theme) {
                     setStored(theme);
                     apply(theme);
-                    try {
-                        if (window.parent && window.parent !== window) {
-                            window.parent.postMessage({ type: "afo-theme", theme: theme }, "*");
-                        }
-                    } catch (_) {}
                 };
                 apply(getStored() || "light");
                 document.addEventListener("DOMContentLoaded", function () {
                     apply(getStored() || "light");
                 });
+                // The shell (when this page is loaded inside its iframe) broadcasts
+                // theme changes here so this page stays in sync without polling.
                 window.addEventListener("message", function (e) {
                     if (e.data && e.data.type === "afo-theme") {
                         setStored(e.data.theme);
@@ -107,7 +102,7 @@
                 transition: background-color 0.25s ease, color 0.25s ease;
             }
 
-            .search-sticky, .card, .faq-item, footer, mark.search-highlight, .search-dropdown, .theme-toggle {
+            .search-sticky, .card, .faq-item, footer, mark.search-highlight, .search-dropdown {
                 transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             }
 
@@ -121,10 +116,6 @@
                 max-width: 900px;
                 margin: 2rem auto 0;
                 padding: 0 1.25rem;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
             }
             .page-header .heading-block h1 {
                 font-size: 2.2rem;
@@ -137,28 +128,6 @@
                 color: var(--text-medium);
                 margin-top: 0.35rem;
                 font-size: 1rem;
-            }
-
-            .theme-toggle {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                background: var(--white);
-                border: 1px solid var(--border-color);
-                border-radius: 999px;
-                padding: 0.4rem 0.8rem;
-                box-shadow: var(--shadow-sm);
-                cursor: pointer;
-                white-space: nowrap;
-                font-size: 0.85rem;
-                color: var(--text-medium);
-                user-select: none;
-            }
-            .theme-toggle input {
-                accent-color: var(--primary-blue);
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
             }
 
             /* Sticky search bar */
@@ -490,11 +459,6 @@
             }
 
             @media (max-width: 640px) {
-                .page-header {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 0.75rem;
-                }
                 .page-header .heading-block h1 {
                     font-size: 1.7rem;
                 }
@@ -517,10 +481,6 @@
                 <h1>FAQ</h1>
                 <p>Answers to the questions we get asked the most on AllForOne SMP.</p>
             </div>
-            <label class="theme-toggle" for="themeToggleInput">
-                <input type="checkbox" id="themeToggleInput" onchange="window.__setTheme(this.checked ? 'dark' : 'light')" />
-                <span id="themeToggleLabel">Dark mode</span>
-            </label>
         </div>
 
         <div class="search-sticky">
