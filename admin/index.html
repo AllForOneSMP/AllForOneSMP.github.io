@@ -1191,38 +1191,15 @@
         </div>
 
         <!-- Toast -->
-        <div class="toast" id="toast"></div>
+        <script>
+            // Admin panel — Firebase (Firestore + Realtime DB) fully removed.
+            // Talks to the self-hosted backend at STATS_API_BASE for everything:
+            // login/session, server info, banner, info message, hidden players,
+            // downtimes, and news. Cloudinary upload logic is unchanged (that was
+            // never Firebase — media files still upload straight from the browser).
+            "use strict";
 
-        <!-- Firebase -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                getDoc,
-                setDoc,
-                addDoc,
-                deleteDoc,
-                updateDoc,
-                collection,
-                onSnapshot,
-                orderBy,
-                query,
-                serverTimestamp
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-            import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-            const firebaseConfig = {
-                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
-                authDomain: "allforone-stats.firebaseapp.com",
-                projectId: "allforone-stats",
-                storageBucket: "allforone-stats.firebasestorage.app",
-                messagingSenderId: "235057820326",
-                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
-            };
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const rtdb = getDatabase(app);
+            const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
 
             const CLOUDINARY_CLOUD_NAME = "dgrmpcha9";
             const CLOUDINARY_UPLOAD_PRESET = "AllForOne Posts";
@@ -1230,6 +1207,18 @@
             // Strict aspect ratio enforced for news images: 16:9
             const REQUIRED_RATIO = 16 / 9;
             const RATIO_TOLERANCE = 0.01; // small tolerance for rounding
+
+            // Session token, kept in memory only (not localStorage/sessionStorage)
+            // so a browser restart always requires logging in again, as requested.
+            let authToken = null;
+
+            // Poll intervals for the various admin sub-panels. These replace
+            // Firestore's onSnapshot live updates — slightly less "instant", but
+            // there's normally only one admin using this panel at a time.
+            const HIDDEN_PLAYERS_POLL_MS = 5 * 1000;
+            const DOWNTIMES_POLL_MS = 10 * 1000;
+            const NEWS_POLL_MS = 10 * 1000;
+            let pollTimers = [];
 
             function formatDateTime(date) {
                 return date.toLocaleString([], {
@@ -1244,25 +1233,57 @@
                 return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
-            // ─── PASSWORD ─────────────────────────────────────────────
+            // ─── FETCH HELPER ───────────────────────────────────────────
+            // Wraps fetch with the JSON content type + bearer token, and
+            // surfaces a clear "please log in again" toast if the token has
+            // expired or is otherwise rejected, rather than failing silently.
+            async function apiFetch(path, options = {}) {
+                const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+                if (authToken) headers.Authorization = `Bearer ${authToken}`;
+                const res = await fetch(`${STATS_API_BASE}${path}`, { ...options, headers });
+                if (res.status === 401) {
+                    showToast("Your session expired. Please log in again.", "error");
+                    window.logout();
+                    throw new Error("Unauthorized");
+                }
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.error || `HTTP ${res.status}`);
+                }
+                return res.status === 204 ? null : res.json();
+            }
+
+            // ─── PASSWORD / LOGIN ───────────────────────────────────────
+            // Password is now verified server-side via bcrypt on the backend -
+            // the browser never knows or checks the real password itself.
             window.checkPassword = async function () {
                 const pw = document.getElementById("passwordInput").value.trim();
                 if (!pw) return;
                 try {
-                    const snap = await get(ref(rtdb, "password"));
-                    if (String(snap.val()) === String(pw)) {
-                        document.getElementById("loginScreen").style.display = "none";
-                        document.getElementById("adminApp").style.display = "block";
-                        initAdmin();
-                    } else {
+                    const res = await fetch(`${STATS_API_BASE}/api/admin/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ password: pw })
+                    });
+                    if (!res.ok) {
                         document.getElementById("loginError").style.display = "block";
+                        return;
                     }
+                    const data = await res.json();
+                    authToken = data.token;
+                    document.getElementById("loginError").style.display = "none";
+                    document.getElementById("loginScreen").style.display = "none";
+                    document.getElementById("adminApp").style.display = "block";
+                    initAdmin();
                 } catch (e) {
-                    showToast("Could not verify password: " + e.message, "error");
+                    showToast("Could not reach the admin backend: " + e.message, "error");
                 }
             };
 
             window.logout = function () {
+                authToken = null;
+                pollTimers.forEach(clearInterval);
+                pollTimers = [];
                 document.getElementById("loginScreen").style.display = "flex";
                 document.getElementById("adminApp").style.display = "none";
                 document.getElementById("passwordInput").value = "";
@@ -1275,7 +1296,7 @@
                 loadHiddenPlayers();
             }
 
-            // ─── CLOUDINARY ───────────────────────────────────────────
+            // ─── CLOUDINARY (unchanged — never used Firebase) ──────────
             async function uploadToCloudinary(file, resourceType) {
                 const fd = new FormData();
                 fd.append("file", file);
@@ -1336,7 +1357,7 @@
                         btnLink: document.getElementById("bannerBtnLink").value.trim(),
                         pages
                     };
-                    await setDoc(doc(db, "serverInfo", "main"), { notificationBanner: bannerData }, { merge: true });
+                    await apiFetch("/api/banner", { method: "PUT", body: JSON.stringify(bannerData) });
                     showToast("Banner saved.", "success");
                     flashStatus("bannerSaveStatus");
                 } catch (e) {
@@ -1346,23 +1367,27 @@
                 btn.disabled = false;
             };
 
-            async function loadBannerConfig(existingData) {
-                const cfg = existingData.notificationBanner;
-                if (!cfg) return;
-                document.getElementById("bannerEnabled").checked = !!cfg.enabled;
-                document.getElementById("bannerText").value = cfg.text || "";
-                if (cfg.bgColor) document.getElementById("bannerBgColor").value = cfg.bgColor;
-                if (cfg.textColor) document.getElementById("bannerTextColor").value = cfg.textColor;
-                if (cfg.btnBgColor) document.getElementById("bannerBtnBgColor").value = cfg.btnBgColor;
-                if (cfg.btnTextColor) document.getElementById("bannerBtnTextColor").value = cfg.btnTextColor;
-                document.getElementById("bannerBtnLabel").value = cfg.btnLabel || "";
-                document.getElementById("bannerBtnLink").value = cfg.btnLink || "";
-                if (cfg.pages && cfg.pages.length) {
-                    document.querySelectorAll(".page-check-btn").forEach((btn) => {
-                        if (cfg.pages.includes(btn.dataset.page)) btn.classList.add("selected");
-                    });
+            async function loadBannerConfig() {
+                try {
+                    const cfg = await apiFetch("/api/banner");
+                    if (!cfg) return;
+                    document.getElementById("bannerEnabled").checked = !!cfg.enabled;
+                    document.getElementById("bannerText").value = cfg.text || "";
+                    if (cfg.bgColor) document.getElementById("bannerBgColor").value = cfg.bgColor;
+                    if (cfg.textColor) document.getElementById("bannerTextColor").value = cfg.textColor;
+                    if (cfg.btnBgColor) document.getElementById("bannerBtnBgColor").value = cfg.btnBgColor;
+                    if (cfg.btnTextColor) document.getElementById("bannerBtnTextColor").value = cfg.btnTextColor;
+                    document.getElementById("bannerBtnLabel").value = cfg.btnLabel || "";
+                    document.getElementById("bannerBtnLink").value = cfg.btnLink || "";
+                    if (cfg.pages && cfg.pages.length) {
+                        document.querySelectorAll(".page-check-btn").forEach((btn) => {
+                            if (cfg.pages.includes(btn.dataset.page)) btn.classList.add("selected");
+                        });
+                    }
+                    window.updateBannerPreview();
+                } catch (e) {
+                    showToast("Could not load banner config: " + e.message, "error");
                 }
-                window.updateBannerPreview();
             }
 
             // ─── INFO MESSAGE ─────────────────────────────────────────
@@ -1376,7 +1401,7 @@
                         title: document.getElementById("infoTitle").value.trim(),
                         text: document.getElementById("infoText").value.trim()
                     };
-                    await setDoc(doc(db, "serverInfo", "main"), { infoMessage: infoData }, { merge: true });
+                    await apiFetch("/api/info-message", { method: "PUT", body: JSON.stringify(infoData) });
                     showToast("Info message saved.", "success");
                     flashStatus("infoSaveStatus");
                 } catch (e) {
@@ -1386,25 +1411,28 @@
                 btn.disabled = false;
             };
 
-            function loadInfoMessage(existingData) {
-                const info = existingData.infoMessage;
-                if (!info) return;
-                document.getElementById("infoEnabled").checked = !!info.enabled;
-                document.getElementById("infoTitle").value = info.title || "";
-                document.getElementById("infoText").value = info.text || "";
+            async function loadInfoMessage() {
+                try {
+                    const info = await apiFetch("/api/info-message");
+                    if (!info) return;
+                    document.getElementById("infoEnabled").checked = !!info.enabled;
+                    document.getElementById("infoTitle").value = info.title || "";
+                    document.getElementById("infoText").value = info.text || "";
+                } catch (e) {
+                    showToast("Could not load info message: " + e.message, "error");
+                }
             }
 
             // ─── JOIN CODE / SERVER INFO ──────────────────────────────
             async function loadCurrentServerInfo() {
                 try {
-                    const snap = await getDoc(doc(db, "serverInfo", "main"));
-                    const d = snap.exists() ? snap.data() : {};
+                    const d = await apiFetch("/api/server-info");
                     document.getElementById("serverIp").value = d.serverIp || "";
                     document.getElementById("connectionId").value = d.connectionId || "";
                     document.getElementById("playNowLink").value = d.playNowLink || "";
-                    loadBannerConfig(d);
-                    loadInfoMessage(d);
                 } catch (_) {}
+                loadBannerConfig();
+                loadInfoMessage();
             }
 
             window.saveServerInfo = async function () {
@@ -1412,16 +1440,14 @@
                 btn.textContent = "Saving…";
                 btn.disabled = true;
                 try {
-                    await setDoc(
-                        doc(db, "serverInfo", "main"),
-                        {
+                    await apiFetch("/api/server-info", {
+                        method: "PUT",
+                        body: JSON.stringify({
                             serverIp: document.getElementById("serverIp").value.trim(),
                             connectionId: document.getElementById("connectionId").value.trim(),
-                            playNowLink: document.getElementById("playNowLink").value.trim(),
-                            updatedAt: serverTimestamp()
-                        },
-                        { merge: true }
-                    );
+                            playNowLink: document.getElementById("playNowLink").value.trim()
+                        })
+                    });
                     showToast("Server info saved.", "success");
                     flashStatus("serverInfoStatus");
                 } catch (e) {
@@ -1434,10 +1460,17 @@
             // ─── HIDDEN PLAYERS ─────────────────────────────────────────
             let currentHiddenPlayers = [];
             function loadHiddenPlayers() {
-                onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
-                    currentHiddenPlayers = snap.exists() ? snap.data().hiddenPlayers || [] : [];
-                    renderHiddenPlayerList();
-                });
+                async function refresh() {
+                    try {
+                        const data = await apiFetch("/api/hidden-players");
+                        currentHiddenPlayers = data.hiddenPlayers || [];
+                        renderHiddenPlayerList();
+                    } catch (_) {
+                        // apiFetch already surfaces a toast on real failures
+                    }
+                }
+                refresh();
+                pollTimers.push(setInterval(refresh, HIDDEN_PLAYERS_POLL_MS));
             }
             function renderHiddenPlayerList() {
                 const list = document.getElementById("hiddenPlayerList");
@@ -1446,11 +1479,12 @@
                     list.innerHTML = '<div class="empty-state">No players hidden.</div>';
                     return;
                 }
-                currentHiddenPlayers.forEach((name, i) => {
+                currentHiddenPlayers.forEach((name) => {
                     const el = document.createElement("div");
                     el.className = "hidden-player-entry";
                     el.innerHTML = `<div class="info"><span class="eye-icon">&#128065;</span>${escapeHtml(name)}</div>
-                        <button class="btn btn-danger" onclick="removeHiddenPlayer(${i})">Remove</button>`;
+                        <button class="btn btn-danger" data-name="${escapeHtml(name)}">Remove</button>`;
+                    el.querySelector("button").addEventListener("click", () => removeHiddenPlayer(name));
                     list.appendChild(el);
                 });
             }
@@ -1466,25 +1500,39 @@
                     showToast("That player is already hidden.", "error");
                     return;
                 }
-                currentHiddenPlayers.push(name);
-                await setDoc(doc(db, "serverInfo", "main"), { hiddenPlayers: currentHiddenPlayers }, { merge: true });
-                input.value = "";
-                showToast(`${name} is now hidden.`, "success");
+                try {
+                    await apiFetch("/api/hidden-players", { method: "POST", body: JSON.stringify({ name }) });
+                    currentHiddenPlayers.push(name);
+                    renderHiddenPlayerList();
+                    input.value = "";
+                    showToast(`${name} is now hidden.`, "success");
+                } catch (e) {
+                    showToast("Error: " + e.message, "error");
+                }
             };
-            window.removeHiddenPlayer = async function (idx) {
-                const removed = currentHiddenPlayers[idx];
-                currentHiddenPlayers.splice(idx, 1);
-                await setDoc(doc(db, "serverInfo", "main"), { hiddenPlayers: currentHiddenPlayers }, { merge: true });
-                showToast(`${removed} is no longer hidden.`, "success");
-            };
+            async function removeHiddenPlayer(name) {
+                try {
+                    await apiFetch(`/api/hidden-players/${encodeURIComponent(name)}`, { method: "DELETE" });
+                    currentHiddenPlayers = currentHiddenPlayers.filter((n) => n.toLowerCase() !== name.toLowerCase());
+                    renderHiddenPlayerList();
+                    showToast(`${name} is no longer hidden.`, "success");
+                } catch (e) {
+                    showToast("Error: " + e.message, "error");
+                }
+            }
 
             // ─── DOWNTIMES ────────────────────────────────────────────
             let currentDowntimes = [];
             function loadDowntimes() {
-                onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
-                    currentDowntimes = snap.exists() ? snap.data().downtimes || [] : [];
-                    renderDowntimeList();
-                });
+                async function refresh() {
+                    try {
+                        const data = await apiFetch("/api/downtimes");
+                        currentDowntimes = data.downtimes || [];
+                        renderDowntimeList();
+                    } catch (_) {}
+                }
+                refresh();
+                pollTimers.push(setInterval(refresh, DOWNTIMES_POLL_MS));
             }
             function renderDowntimeList() {
                 const list = document.getElementById("downtimeList");
@@ -1493,7 +1541,7 @@
                     list.innerHTML = '<div class="empty-state">No downtimes scheduled.</div>';
                     return;
                 }
-                currentDowntimes.forEach((dt, i) => {
+                currentDowntimes.forEach((dt) => {
                     if (!dt.startTimestamp) return;
                     const start = new Date(dt.startTimestamp);
                     let rangeText = formatDateTime(start);
@@ -1507,7 +1555,8 @@
                     const el = document.createElement("div");
                     el.className = "downtime-entry";
                     el.innerHTML = `<div class="info"><strong>${escapeHtml(dt.label)}</strong><span>${escapeHtml(rangeText)}</span></div>
-                        <button class="btn btn-danger" onclick="removeDowntime(${i})">Remove</button>`;
+                        <button class="btn btn-danger">Remove</button>`;
+                    el.querySelector("button").addEventListener("click", () => removeDowntime(dt.id));
                     list.appendChild(el);
                 });
             }
@@ -1529,24 +1578,36 @@
                     }
                     entry.endTimestamp = endDate.toISOString();
                 }
-                currentDowntimes.push(entry);
-                await updateDoc(doc(db, "serverInfo", "main"), { downtimes: currentDowntimes });
-                document.getElementById("dtLabel").value = "";
-                document.getElementById("dtStart").value = "";
-                document.getElementById("dtEnd").value = "";
-                showToast("Downtime added.", "success");
+                try {
+                    await apiFetch("/api/downtimes", { method: "POST", body: JSON.stringify(entry) });
+                    document.getElementById("dtLabel").value = "";
+                    document.getElementById("dtStart").value = "";
+                    document.getElementById("dtEnd").value = "";
+                    showToast("Downtime added.", "success");
+                    const data = await apiFetch("/api/downtimes");
+                    currentDowntimes = data.downtimes || [];
+                    renderDowntimeList();
+                } catch (e) {
+                    showToast("Error: " + e.message, "error");
+                }
             };
-            window.removeDowntime = async function (idx) {
-                currentDowntimes.splice(idx, 1);
-                await updateDoc(doc(db, "serverInfo", "main"), { downtimes: currentDowntimes });
-                showToast("Downtime removed.", "success");
-            };
+            async function removeDowntime(id) {
+                try {
+                    await apiFetch(`/api/downtimes/${id}`, { method: "DELETE" });
+                    currentDowntimes = currentDowntimes.filter((d) => d.id !== id);
+                    renderDowntimeList();
+                    showToast("Downtime removed.", "success");
+                } catch (e) {
+                    showToast("Error: " + e.message, "error");
+                }
+            }
 
-            // ─── NEWS: MEDIA STAGING ────────────────────────────────────
+            // ─── NEWS: MEDIA STAGING (unchanged logic, still Cloudinary) ──
             // pendingMedia holds items to be attached to the news post being created/edited.
             // Each item: { type: 'image'|'video-file'|'video-link', url, file (optional, pre-upload), previewUrl }
             let pendingMedia = [];
             let editingNewsId = null; // null = creating new
+            let currentNewsList = [];
 
             function getImageDimensions(file) {
                 return new Promise((resolve, reject) => {
@@ -1640,58 +1701,60 @@
                               : item.url;
 
                     el.innerHTML = `${thumbHtml}<span class="label">${escapeHtml(labelText)}</span>
-                        <button class="btn btn-danger btn-small" onclick="removeMediaItem(${i})">Remove</button>`;
+                        <button class="btn btn-danger btn-small">Remove</button>`;
+                    el.querySelector("button").addEventListener("click", () => removeMediaItem(i));
                     list.appendChild(el);
                 });
             }
 
             // ─── NEWS: PUBLISH / EDIT / DELETE ─────────────────────────
             function loadNews() {
-                const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
-                onSnapshot(q, (snap) => {
-                    const list = document.getElementById("newsList");
-                    list.innerHTML = "";
-                    if (snap.empty) {
-                        list.innerHTML = '<div class="empty-state">No news published yet.</div>';
-                        return;
-                    }
-                    snap.forEach((d) => {
-                        const n = { id: d.id, ...d.data() };
-                        const firstImage = (Array.isArray(n.media) && n.media.find((m) => m.type === "image")) || null;
-                        const thumbSrc = firstImage ? firstImage.url : n.imageUrl || null;
+                async function refresh() {
+                    try {
+                        const data = await apiFetch("/api/news");
+                        currentNewsList = data.news || [];
+                        renderNewsList();
+                    } catch (_) {}
+                }
+                refresh();
+                pollTimers.push(setInterval(refresh, NEWS_POLL_MS));
+            }
 
-                        const el = document.createElement("div");
-                        el.className = "news-entry";
-                        const mediaCount = Array.isArray(n.media) ? n.media.length : n.imageUrl ? 1 : 0;
-                        el.innerHTML = `${thumbSrc ? `<img src="${thumbSrc}" alt="">` : `<div class="thumb-icon" style="width:80px;height:45px">NO IMG</div>`}
-                            <div class="info"><strong>${escapeHtml(n.title || "Untitled")}</strong><small>${mediaCount} media item${mediaCount === 1 ? "" : "s"}</small></div>
-                            <div class="actions">
-                                <button class="btn btn-outline btn-small" onclick="editNews('${n.id}')">Edit</button>
-                                <button class="btn btn-danger" onclick="deleteNews('${n.id}')">Delete</button>
-                            </div>`;
-                        list.appendChild(el);
-                    });
+            function renderNewsList() {
+                const list = document.getElementById("newsList");
+                list.innerHTML = "";
+                if (!currentNewsList.length) {
+                    list.innerHTML = '<div class="empty-state">No news published yet.</div>';
+                    return;
+                }
+                currentNewsList.forEach((n) => {
+                    const firstImage = (Array.isArray(n.media) && n.media.find((m) => m.type === "image")) || null;
+                    const thumbSrc = firstImage ? firstImage.url : null;
+
+                    const el = document.createElement("div");
+                    el.className = "news-entry";
+                    const mediaCount = Array.isArray(n.media) ? n.media.length : 0;
+                    el.innerHTML = `${thumbSrc ? `<img src="${thumbSrc}" alt="">` : `<div class="thumb-icon" style="width:80px;height:45px">NO IMG</div>`}
+                        <div class="info"><strong>${escapeHtml(n.title || "Untitled")}</strong><small>${mediaCount} media item${mediaCount === 1 ? "" : "s"}</small></div>
+                        <div class="actions">
+                            <button class="btn btn-outline btn-small" data-action="edit">Edit</button>
+                            <button class="btn btn-danger" data-action="delete">Delete</button>
+                        </div>`;
+                    el.querySelector('[data-action="edit"]').addEventListener("click", () => editNews(n.id));
+                    el.querySelector('[data-action="delete"]').addEventListener("click", () => deleteNews(n.id));
+                    list.appendChild(el);
                 });
             }
 
             window.editNews = async function (id) {
                 try {
-                    const snap = await getDoc(doc(db, "news", id));
-                    if (!snap.exists()) {
-                        showToast("That news item no longer exists.", "error");
-                        return;
-                    }
-                    const n = snap.data();
+                    const n = await apiFetch(`/api/news/${id}`);
                     editingNewsId = id;
                     document.getElementById("newsTitle").value = n.title || "";
                     document.getElementById("newsDescription").value = n.description || "";
 
                     pendingMedia = [];
-                    const mediaList = Array.isArray(n.media)
-                        ? n.media
-                        : n.imageUrl
-                          ? [{ type: "image", url: n.imageUrl }]
-                          : [];
+                    const mediaList = Array.isArray(n.media) ? n.media : [];
                     mediaList.forEach((m) => {
                         if (m.type === "image") pendingMedia.push({ type: "image", url: m.url, previewUrl: m.url });
                         else if (m.type === "video-file")
@@ -1754,23 +1817,22 @@
                     }
 
                     if (editingNewsId) {
-                        await updateDoc(doc(db, "news", editingNewsId), {
-                            title,
-                            description,
-                            media: resolvedMedia,
-                            updatedAt: serverTimestamp()
+                        await apiFetch(`/api/news/${editingNewsId}`, {
+                            method: "PUT",
+                            body: JSON.stringify({ title, description, media: resolvedMedia })
                         });
                         showToast("News item updated.", "success");
                     } else {
-                        await addDoc(collection(db, "news"), {
-                            title,
-                            description,
-                            media: resolvedMedia,
-                            createdAt: serverTimestamp()
+                        await apiFetch("/api/news", {
+                            method: "POST",
+                            body: JSON.stringify({ title, description, media: resolvedMedia })
                         });
                         showToast("News published.", "success");
                     }
                     resetNewsForm();
+                    const data = await apiFetch("/api/news");
+                    currentNewsList = data.news || [];
+                    renderNewsList();
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
                 }
@@ -1780,9 +1842,15 @@
 
             window.deleteNews = async function (id) {
                 if (!confirm("Delete this news item?")) return;
-                await deleteDoc(doc(db, "news", id));
-                if (editingNewsId === id) resetNewsForm();
-                showToast("News deleted.", "success");
+                try {
+                    await apiFetch(`/api/news/${id}`, { method: "DELETE" });
+                    if (editingNewsId === id) resetNewsForm();
+                    currentNewsList = currentNewsList.filter((n) => n.id !== id);
+                    renderNewsList();
+                    showToast("News deleted.", "success");
+                } catch (e) {
+                    showToast("Error: " + e.message, "error");
+                }
             };
 
             // ─── UTIL ─────────────────────────────────────────────────
@@ -1808,5 +1876,6 @@
                 }, 3500);
             }
         </script>
+
     </body>
 </html>
