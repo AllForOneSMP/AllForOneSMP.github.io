@@ -658,123 +658,107 @@
         <!-- separate from the "Reporting Live/Offline" pill above, which reflects this page's own -->
         <!-- self-hosted reporter/API pipeline health. -->
         <!-- NOTE: this project (allforonemedia-9a7d8) is intentionally left as-is per request. -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyDzQlAqhCeytCLEYafboYGpFu6pY3Kv9WE",
-                authDomain: "allforonemedia-9a7d8.firebaseapp.com",
-                databaseURL: "https://allforonemedia-9a7d8-default-rtdb.firebaseio.com",
-                projectId: "allforonemedia-9a7d8",
-                storageBucket: "allforonemedia-9a7d8.firebasestorage.app",
-                messagingSenderId: "892787060584",
-                appId: "1:892787060584:web:e65609062592f9ba96f0dd",
-                measurementId: "G-JSXKLMBRLC"
-            };
+        <!-- Live Minecraft server state (online / restarting / stopping / offline) -->
+        <!-- and hidden-players list, both now served from the same self-hosted API -->
+        <!-- that already powers the CPU/RAM/players stats below. Firebase removed. -->
+        <script>
+            (function () {
+                "use strict";
 
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+                const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+                const SERVER_STATE_POLL_MS = 2 * 1000; // matches old Firestore recheck cadence
+                const HIDDEN_PLAYERS_POLL_MS = 10 * 1000; // this rarely changes, poll gently
+                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
 
-            const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
-            const SERVER_STATUS_RECHECK_MS = 2 * 1000; // re-evaluate staleness every 2s
-            let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
-            let serverStatusRecheckInterval = null;
+                let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                let hiddenPlayersSet = new Set();
 
-            function renderServerStatusPill() {
-                const dot = document.getElementById("serverStatusDot");
-                const label = document.getElementById("serverStatusLabel");
-                const meta = document.getElementById("serverStatusMeta");
-                if (!dot || !label || !meta) return;
-
-                const rawState = liveServerData.state || "offline";
-
-                let ageMs = Infinity;
-                const hb = liveServerData.lastHeartbeat;
-                if (hb) {
-                    const hbMillis = typeof hb.toMillis === "function" ? hb.toMillis() : new Date(hb).getTime();
-                    ageMs = Date.now() - hbMillis;
-                }
-                const isStale = ageMs > SERVER_STALE_THRESHOLD_MS;
-
-                let displayState = rawState;
-                if ((isStale || !hb) && rawState !== "stopping" && rawState !== "restarting") {
-                    displayState = "offline";
-                }
-
-                const stateMap = {
-                    online: { dotClass: "online", text: "Server Online" },
-                    restarting: { dotClass: "pending", text: "Server Restarting…" },
-                    stopping: { dotClass: "pending", text: "Server Stopping…" },
-                    offline: { dotClass: "offline", text: "Server Offline" }
+                // Exposed globally so the main stats script below (and this file's own
+                // renderer) can filter player names/counts consistently.
+                window.__applyHiddenPlayers = function (names) {
+                    if (!Array.isArray(names) || names.length === 0) return [];
+                    return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
                 };
-                const s = stateMap[displayState] || stateMap.offline;
 
-                dot.className = "status-dot " + s.dotClass;
-                label.textContent = s.text;
+                function renderServerStatusPill() {
+                    const dot = document.getElementById("serverStatusDot");
+                    const label = document.getElementById("serverStatusLabel");
+                    const meta = document.getElementById("serverStatusMeta");
+                    if (!dot || !label || !meta) return;
 
-                if (displayState === "online") {
-                    const rawNames = liveServerData.playerList || [];
-                    const visibleNames = window.__applyHiddenPlayers ? window.__applyHiddenPlayers(rawNames) : rawNames;
-                    const count = visibleNames.length;
-                    meta.textContent = count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
-                } else {
-                    meta.textContent = "—";
+                    const rawState = liveServerData.state || "offline";
+
+                    let ageMs = Infinity;
+                    const hb = liveServerData.lastHeartbeat;
+                    if (hb) {
+                        ageMs = Date.now() - new Date(hb).getTime();
+                    }
+                    const isStale = ageMs > SERVER_STALE_THRESHOLD_MS;
+
+                    let displayState = rawState;
+                    if ((isStale || !hb) && rawState !== "stopping" && rawState !== "restarting") {
+                        displayState = "offline";
+                    }
+
+                    const stateMap = {
+                        online: { dotClass: "online", text: "Server Online" },
+                        restarting: { dotClass: "pending", text: "Server Restarting…" },
+                        stopping: { dotClass: "pending", text: "Server Stopping…" },
+                        offline: { dotClass: "offline", text: "Server Offline" }
+                    };
+                    const s = stateMap[displayState] || stateMap.offline;
+
+                    dot.className = "status-dot " + s.dotClass;
+                    label.textContent = s.text;
+
+                    if (displayState === "online") {
+                        const rawNames = liveServerData.playerList || [];
+                        const visibleNames = window.__applyHiddenPlayers(rawNames);
+                        const count = visibleNames.length;
+                        meta.textContent = count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
+                    } else {
+                        meta.textContent = "—";
+                    }
                 }
-            }
 
-            function loadLiveServerStatus() {
-                onSnapshot(doc(db, "serverStatus", "live"), (snap) => {
-                    liveServerData = snap.exists()
-                        ? snap.data()
-                        : { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                async function pollServerState() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/server-state`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        liveServerData = await res.json();
+                    } catch (err) {
+                        console.error("[server-state] poll failed:", err);
+                        liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                    }
                     renderServerStatusPill();
-                });
+                }
 
-                if (serverStatusRecheckInterval) clearInterval(serverStatusRecheckInterval);
-                serverStatusRecheckInterval = setInterval(renderServerStatusPill, SERVER_STATUS_RECHECK_MS);
-            }
+                async function pollHiddenPlayers() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/hidden-players`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        const hp = Array.isArray(json.hiddenPlayers) ? json.hiddenPlayers : [];
+                        hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
+                        window.dispatchEvent(new Event("afo-hidden-players-updated"));
+                    } catch (err) {
+                        console.error("[hidden-players] poll failed:", err);
+                    }
+                }
 
-            // Re-render this pill whenever the hidden-players list (loaded from the
-            // allforone-stats project below) changes, so filtering applies immediately.
-            window.addEventListener("afo-hidden-players-updated", renderServerStatusPill);
+                // Re-render this pill whenever the hidden-players list changes, so
+                // filtering applies immediately rather than waiting for the next
+                // server-state poll.
+                window.addEventListener("afo-hidden-players-updated", renderServerStatusPill);
 
-            loadLiveServerStatus();
-        </script>
-
-        <!-- Firebase: hidden-players list, read from the SAME project the admin panel and -->
-        <!-- home page use (allforone-stats). This is separate from the live-server-state -->
-        <!-- listener above, which intentionally stays on the allforonemedia-9a7d8 project. -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-            const hiddenPlayersFirebaseConfig = {
-                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
-                authDomain: "allforone-stats.firebaseapp.com",
-                projectId: "allforone-stats",
-                storageBucket: "allforone-stats.firebasestorage.app",
-                messagingSenderId: "235057820326",
-                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
-            };
-
-            const hpApp = initializeApp(hiddenPlayersFirebaseConfig, "hiddenPlayersApp");
-            const hpDb = getFirestore(hpApp);
-
-            let hiddenPlayersSet = new Set();
-
-            // Exposed globally so both the live-server-state pill above and the
-            // main stats script below can filter player names/counts consistently.
-            window.__applyHiddenPlayers = function (names) {
-                if (!Array.isArray(names) || names.length === 0) return [];
-                return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
-            };
-
-            onSnapshot(doc(hpDb, "serverInfo", "main"), (snap) => {
-                const hp = snap.exists() && Array.isArray(snap.data().hiddenPlayers) ? snap.data().hiddenPlayers : [];
-                hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
-                window.dispatchEvent(new Event("afo-hidden-players-updated"));
-            });
+                pollServerState();
+                pollHiddenPlayers();
+                setInterval(pollServerState, SERVER_STATE_POLL_MS);
+                setInterval(pollHiddenPlayers, HIDDEN_PLAYERS_POLL_MS);
+            })();
         </script>
 
         <script>
@@ -1114,5 +1098,6 @@
                 setInterval(checkStale, 30 * 1000); // 30 seconds
             })();
         </script>
+
     </body>
 </html>
