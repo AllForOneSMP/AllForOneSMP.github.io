@@ -1172,6 +1172,27 @@
                             Cancel Edit
                         </button>
 
+                        <div class="upload-progress-wrap" id="newsUploadProgressWrap" style="display: none; margin-top: 1rem">
+                            <div
+                                style="
+                                    width: 100%;
+                                    height: 10px;
+                                    background: var(--light-blue);
+                                    border-radius: 6px;
+                                    overflow: hidden;
+                                    border: 1px solid var(--border-color);
+                                ">
+                                <div
+                                    id="newsUploadProgressFill"
+                                    style="height: 100%; width: 0%; background: var(--primary-blue); transition: width 0.15s ease"></div>
+                            </div>
+                            <div
+                                id="newsUploadProgressLabel"
+                                style="font-size: 0.85rem; color: var(--text-medium); margin-top: 0.4rem">
+                                Uploading…
+                            </div>
+                        </div>
+
                         <div style="margin-top: 1.75rem">
                             <h4
                                 style="
@@ -1236,25 +1257,6 @@
             }
 
             // ─── FETCH HELPER ───────────────────────────────────────────
-            // Wraps fetch with the JSON content type + bearer token, and
-            // surfaces a clear "please log in again" toast if the token has
-            // expired or is otherwise rejected, rather than failing silently.
-            //
-            // FIX: the previous version called res.json() separately for the
-            // success and failure branches. If a 200 OK response ever came
-            // back with a body that wasn't clean JSON (empty body, trailing
-            // whitespace, an HTML page injected by a proxy/tunnel, etc.) the
-            // res.json() call would throw INSIDE what should have been the
-            // "success" path. That exception then propagated up into the
-            // caller's catch block, which showed an "Error" toast / left the
-            // button stuck on "Saving…" even though the request had already
-            // been applied successfully server-side. This is almost
-            // certainly what you were seeing with the banner and server-info
-            // saves.
-            //
-            // Now we read the body once as text, try to parse JSON only for
-            // display purposes, and ONLY treat the call as failed when
-            // res.ok is actually false.
             async function apiFetch(path, options = {}) {
                 const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
                 if (authToken) headers.Authorization = `Bearer ${authToken}`;
@@ -1263,9 +1265,6 @@
                 try {
                     res = await fetch(`${STATS_API_BASE}${path}`, { ...options, headers });
                 } catch (networkErr) {
-                    // fetch() itself failed — DNS, CORS, the Tailscale Funnel
-                    // hop being down, etc. This really is a failure; the
-                    // request never made it to the server.
                     throw new Error(`Could not reach server: ${networkErr.message}`);
                 }
 
@@ -1291,15 +1290,10 @@
                     throw new Error(errMsg);
                 }
 
-                // Success — return parsed JSON if we got any, otherwise null.
-                // Covers 204 No Content, empty 200 bodies, and any other
-                // non-JSON-but-still-successful response.
                 return parsed;
             }
 
             // ─── PASSWORD / LOGIN ───────────────────────────────────────
-            // Password is now verified server-side via bcrypt on the backend -
-            // the browser never knows or checks the real password itself.
             window.checkPassword = async function () {
                 const pw = document.getElementById("passwordInput").value.trim();
                 if (!pw) return;
@@ -1340,19 +1334,41 @@
                 loadHiddenPlayers();
             }
 
-            // ─── CLOUDINARY (unchanged — never used Firebase) ──────────
-            async function uploadToCloudinary(file, resourceType) {
-                const fd = new FormData();
-                fd.append("file", file);
-                fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-                const type = resourceType || "auto";
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${type}/upload`, {
-                    method: "POST",
-                    body: fd
+            // ─── CLOUDINARY ─────────────────────────────────────────────
+            // Uses XMLHttpRequest (instead of fetch) so we get real upload
+            // progress events, and surfaces Cloudinary's actual error
+            // message on failure instead of a generic "upload failed".
+            function uploadToCloudinary(file, resourceType, onProgress) {
+                return new Promise((resolve, reject) => {
+                    const type = resourceType || "auto";
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${type}/upload`);
+                    xhr.upload.onprogress = (e) => {
+                        if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total);
+                    };
+                    xhr.onload = () => {
+                        let data;
+                        try {
+                            data = JSON.parse(xhr.responseText);
+                        } catch (_) {
+                            reject(new Error(`Cloudinary returned an unreadable response (HTTP ${xhr.status}).`));
+                            return;
+                        }
+                        if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+                            resolve(data.secure_url);
+                        } else {
+                            const msg =
+                                (data && data.error && data.error.message) ||
+                                `Cloudinary upload failed (HTTP ${xhr.status}).`;
+                            reject(new Error(`${file.name}: ${msg}`));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error(`Network error uploading ${file.name} to Cloudinary.`));
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+                    xhr.send(fd);
                 });
-                const data = await res.json();
-                if (!data.secure_url) throw new Error("Cloudinary upload failed");
-                return data.secure_url;
             }
 
             // ─── BANNER ───────────────────────────────────────────────
@@ -1384,8 +1400,6 @@
                 }
             };
 
-            // FIX: reset moved into a `finally` block so the button can
-            // never get stuck on "Saving…", no matter what throws.
             window.saveBanner = async function () {
                 const btn = document.querySelector('[onclick="saveBanner()"]');
                 btn.textContent = "Saving…";
@@ -1647,7 +1661,7 @@
                 }
             }
 
-            // ─── NEWS: MEDIA STAGING (unchanged logic, still Cloudinary) ──
+            // ─── NEWS: MEDIA STAGING ────────────────────────────────────
             // pendingMedia holds items to be attached to the news post being created/edited.
             // Each item: { type: 'image'|'video-file'|'video-link', url, file (optional, pre-upload), previewUrl }
             let pendingMedia = [];
@@ -1835,11 +1849,11 @@
                 document.getElementById("newsCancelEditBtn").style.display = "none";
             }
 
-            // FIX: reset moved into `finally`, and the "what should the
-            // button say when we're done" logic no longer relies on
-            // comparing against the in-flight "Publishing…" label (that
-            // comparison was always false, so edits incorrectly reset the
-            // button to "Publish News" instead of "Save Changes").
+            // Publishes the news item. Uploads any staged files to Cloudinary
+            // first (in sequence, so the progress bar reads cleanly), then
+            // saves the post via the backend. Progress bar + button state
+            // are always reset in `finally`, so a failed upload can never
+            // leave the UI stuck on "Publishing…".
             window.submitNews = async function () {
                 const title = document.getElementById("newsTitle").value.trim();
                 const description = document.getElementById("newsDescription").value.trim();
@@ -1851,19 +1865,49 @@
                 const wasEditing = !!editingNewsId;
                 btn.textContent = "Publishing…";
                 btn.disabled = true;
+
+                const progressWrap = document.getElementById("newsUploadProgressWrap");
+                const progressFill = document.getElementById("newsUploadProgressFill");
+                const progressLabel = document.getElementById("newsUploadProgressLabel");
+                const totalToUpload = pendingMedia.filter((item) => item.file).length;
+
+                function updateOverallProgress(uploadIdx, itemFraction) {
+                    if (!totalToUpload) return;
+                    const overall = (uploadIdx + itemFraction) / totalToUpload;
+                    progressFill.style.width = `${Math.round(overall * 100)}%`;
+                    progressLabel.textContent = `Uploading ${Math.min(uploadIdx + 1, totalToUpload)} of ${totalToUpload}… (${Math.round(overall * 100)}%)`;
+                }
+
+                if (totalToUpload > 0) {
+                    progressWrap.style.display = "block";
+                    progressFill.style.width = "0%";
+                    progressLabel.textContent = `Uploading 1 of ${totalToUpload}…`;
+                }
+
                 try {
                     // Upload any new files, keep existing URLs as-is
                     const resolvedMedia = [];
+                    let uploadIdx = 0;
                     for (const item of pendingMedia) {
-                        if (item.type === "image") {
-                            const url = item.file ? await uploadToCloudinary(item.file, "image") : item.url;
-                            resolvedMedia.push({ type: "image", url });
-                        } else if (item.type === "video-file") {
-                            const url = item.file ? await uploadToCloudinary(item.file, "video") : item.url;
-                            resolvedMedia.push({ type: "video-file", url });
+                        if (item.type === "image" || item.type === "video-file") {
+                            let url = item.url;
+                            if (item.file) {
+                                url = await uploadToCloudinary(
+                                    item.file,
+                                    item.type === "image" ? "image" : "video",
+                                    (frac) => updateOverallProgress(uploadIdx, frac)
+                                );
+                                uploadIdx++;
+                            }
+                            resolvedMedia.push({ type: item.type, url });
                         } else if (item.type === "video-link") {
                             resolvedMedia.push({ type: "video-link", url: item.url });
                         }
+                    }
+
+                    if (totalToUpload > 0) {
+                        progressFill.style.width = "100%";
+                        progressLabel.textContent = "Saving post…";
                     }
 
                     if (editingNewsId) {
@@ -1888,6 +1932,7 @@
                 } finally {
                     btn.textContent = wasEditing ? "Save Changes" : "Publish News";
                     btn.disabled = false;
+                    progressWrap.style.display = "none";
                 }
             };
 
