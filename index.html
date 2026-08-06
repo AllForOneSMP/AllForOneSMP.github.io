@@ -786,33 +786,29 @@
             })();
         </script>
 
-        <!-- Firebase -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                onSnapshot
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        <!-- Banner config, now polled from the self-hosted backend instead of -->
+        <!-- a Firebase Firestore listener. Firebase removed entirely. -->
+        <script>
+            (function () {
+                "use strict";
+                const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+                const BANNER_POLL_MS = 15 * 1000; // banner config rarely changes; poll gently
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
-                authDomain: "allforone-stats.firebaseapp.com",
-                projectId: "allforone-stats",
-                storageBucket: "allforone-stats.firebasestorage.app",
-                messagingSenderId: "235057820326",
-                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
-            };
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+                async function pollBanner() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/banner`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        window._bannerConfig = data || null;
+                        if (window.applyBanner) window.applyBanner(window._currentPath);
+                    } catch (err) {
+                        console.error("[banner] poll failed:", err);
+                    }
+                }
 
-            // Listen for banner config from Firestore
-            onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
-                if (!snap.exists()) return;
-                const data = snap.data();
-                window._bannerConfig = data.notificationBanner || null;
-                if (window.applyBanner) window.applyBanner(window._currentPath);
-            });
+                pollBanner();
+                setInterval(pollBanner, BANNER_POLL_MS);
+            })();
         </script>
         <script>
             const BASE = "https://allforonesmp.github.io";
@@ -1161,5 +1157,6 @@
 
             navigate("/", null);
         </script>
+
     </body>
 </html>
