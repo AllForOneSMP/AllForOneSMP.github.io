@@ -1191,6 +1191,8 @@
         </div>
 
         <!-- Toast -->
+        <div id="toast" class="toast"></div>
+
         <script>
             // Admin panel — Firebase (Firestore + Realtime DB) fully removed.
             // Talks to the self-hosted backend at STATS_API_BASE for everything:
@@ -1237,20 +1239,62 @@
             // Wraps fetch with the JSON content type + bearer token, and
             // surfaces a clear "please log in again" toast if the token has
             // expired or is otherwise rejected, rather than failing silently.
+            //
+            // FIX: the previous version called res.json() separately for the
+            // success and failure branches. If a 200 OK response ever came
+            // back with a body that wasn't clean JSON (empty body, trailing
+            // whitespace, an HTML page injected by a proxy/tunnel, etc.) the
+            // res.json() call would throw INSIDE what should have been the
+            // "success" path. That exception then propagated up into the
+            // caller's catch block, which showed an "Error" toast / left the
+            // button stuck on "Saving…" even though the request had already
+            // been applied successfully server-side. This is almost
+            // certainly what you were seeing with the banner and server-info
+            // saves.
+            //
+            // Now we read the body once as text, try to parse JSON only for
+            // display purposes, and ONLY treat the call as failed when
+            // res.ok is actually false.
             async function apiFetch(path, options = {}) {
                 const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
                 if (authToken) headers.Authorization = `Bearer ${authToken}`;
-                const res = await fetch(`${STATS_API_BASE}${path}`, { ...options, headers });
+
+                let res;
+                try {
+                    res = await fetch(`${STATS_API_BASE}${path}`, { ...options, headers });
+                } catch (networkErr) {
+                    // fetch() itself failed — DNS, CORS, the Tailscale Funnel
+                    // hop being down, etc. This really is a failure; the
+                    // request never made it to the server.
+                    throw new Error(`Could not reach server: ${networkErr.message}`);
+                }
+
                 if (res.status === 401) {
                     showToast("Your session expired. Please log in again.", "error");
                     window.logout();
                     throw new Error("Unauthorized");
                 }
-                if (!res.ok) {
-                    const body = await res.json().catch(() => ({}));
-                    throw new Error(body.error || `HTTP ${res.status}`);
+
+                const rawText = await res.text().catch(() => "");
+                let parsed = null;
+                if (rawText) {
+                    try {
+                        parsed = JSON.parse(rawText);
+                    } catch (_) {
+                        // Body wasn't valid JSON. Only a real problem if the
+                        // request also failed (handled below).
+                    }
                 }
-                return res.status === 204 ? null : res.json();
+
+                if (!res.ok) {
+                    const errMsg = (parsed && parsed.error) || rawText || `HTTP ${res.status}`;
+                    throw new Error(errMsg);
+                }
+
+                // Success — return parsed JSON if we got any, otherwise null.
+                // Covers 204 No Content, empty 200 bodies, and any other
+                // non-JSON-but-still-successful response.
+                return parsed;
             }
 
             // ─── PASSWORD / LOGIN ───────────────────────────────────────
@@ -1340,6 +1384,8 @@
                 }
             };
 
+            // FIX: reset moved into a `finally` block so the button can
+            // never get stuck on "Saving…", no matter what throws.
             window.saveBanner = async function () {
                 const btn = document.querySelector('[onclick="saveBanner()"]');
                 btn.textContent = "Saving…";
@@ -1362,9 +1408,10 @@
                     flashStatus("bannerSaveStatus");
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
+                } finally {
+                    btn.textContent = "Save Banner";
+                    btn.disabled = false;
                 }
-                btn.textContent = "Save Banner";
-                btn.disabled = false;
             };
 
             async function loadBannerConfig() {
@@ -1406,9 +1453,10 @@
                     flashStatus("infoSaveStatus");
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
+                } finally {
+                    btn.textContent = "Save Info Message";
+                    btn.disabled = false;
                 }
-                btn.textContent = "Save Info Message";
-                btn.disabled = false;
             };
 
             async function loadInfoMessage() {
@@ -1427,9 +1475,7 @@
             async function loadCurrentServerInfo() {
                 try {
                     const d = await apiFetch("/api/server-info");
-                    document.getElementById("serverIp").value = d.serverIp || "";
-                    document.getElementById("connectionId").value = d.connectionId || "";
-                    document.getElementById("playNowLink").value = d.playNowLink || "";
+                    document.getElementById("serverIp").value = (d && d.serverIp) || "";
                 } catch (_) {}
                 loadBannerConfig();
                 loadInfoMessage();
@@ -1443,18 +1489,17 @@
                     await apiFetch("/api/server-info", {
                         method: "PUT",
                         body: JSON.stringify({
-                            serverIp: document.getElementById("serverIp").value.trim(),
-                            connectionId: document.getElementById("connectionId").value.trim(),
-                            playNowLink: document.getElementById("playNowLink").value.trim()
+                            serverIp: document.getElementById("serverIp").value.trim()
                         })
                     });
                     showToast("Server info saved.", "success");
                     flashStatus("serverInfoStatus");
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
+                } finally {
+                    btn.textContent = "Save Server Info";
+                    btn.disabled = false;
                 }
-                btn.textContent = "Save Server Info";
-                btn.disabled = false;
             };
 
             // ─── HIDDEN PLAYERS ─────────────────────────────────────────
@@ -1463,7 +1508,7 @@
                 async function refresh() {
                     try {
                         const data = await apiFetch("/api/hidden-players");
-                        currentHiddenPlayers = data.hiddenPlayers || [];
+                        currentHiddenPlayers = (data && data.hiddenPlayers) || [];
                         renderHiddenPlayerList();
                     } catch (_) {
                         // apiFetch already surfaces a toast on real failures
@@ -1527,7 +1572,7 @@
                 async function refresh() {
                     try {
                         const data = await apiFetch("/api/downtimes");
-                        currentDowntimes = data.downtimes || [];
+                        currentDowntimes = (data && data.downtimes) || [];
                         renderDowntimeList();
                     } catch (_) {}
                 }
@@ -1585,7 +1630,7 @@
                     document.getElementById("dtEnd").value = "";
                     showToast("Downtime added.", "success");
                     const data = await apiFetch("/api/downtimes");
-                    currentDowntimes = data.downtimes || [];
+                    currentDowntimes = (data && data.downtimes) || [];
                     renderDowntimeList();
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
@@ -1712,7 +1757,7 @@
                 async function refresh() {
                     try {
                         const data = await apiFetch("/api/news");
-                        currentNewsList = data.news || [];
+                        currentNewsList = (data && data.news) || [];
                         renderNewsList();
                     } catch (_) {}
                 }
@@ -1790,6 +1835,11 @@
                 document.getElementById("newsCancelEditBtn").style.display = "none";
             }
 
+            // FIX: reset moved into `finally`, and the "what should the
+            // button say when we're done" logic no longer relies on
+            // comparing against the in-flight "Publishing…" label (that
+            // comparison was always false, so edits incorrectly reset the
+            // button to "Publish News" instead of "Save Changes").
             window.submitNews = async function () {
                 const title = document.getElementById("newsTitle").value.trim();
                 const description = document.getElementById("newsDescription").value.trim();
@@ -1798,7 +1848,7 @@
                     return;
                 }
                 const btn = document.getElementById("newsSubmitBtn");
-                const originalLabel = btn.textContent;
+                const wasEditing = !!editingNewsId;
                 btn.textContent = "Publishing…";
                 btn.disabled = true;
                 try {
@@ -1831,13 +1881,14 @@
                     }
                     resetNewsForm();
                     const data = await apiFetch("/api/news");
-                    currentNewsList = data.news || [];
+                    currentNewsList = (data && data.news) || [];
                     renderNewsList();
                 } catch (e) {
                     showToast("Error: " + e.message, "error");
+                } finally {
+                    btn.textContent = wasEditing ? "Save Changes" : "Publish News";
+                    btn.disabled = false;
                 }
-                btn.textContent = originalLabel === "Publishing…" ? "Publish News" : originalLabel;
-                btn.disabled = false;
             };
 
             window.deleteNews = async function (id) {
@@ -1876,6 +1927,5 @@
                 }, 3500);
             }
         </script>
-
     </body>
 </html>
