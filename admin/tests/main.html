@@ -1264,7 +1264,102 @@
         </footer>
 
         <!-- Firebase -->
-<script>
+        <script>
+            (function () {
+                "use strict";
+
+                const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+                const SERVER_STATE_POLL_MS = 2 * 1000;
+                const HIDDEN_PLAYERS_POLL_MS = 10 * 1000;
+                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
+
+                let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                let hiddenPlayersSet = new Set();
+
+                window.__applyHiddenPlayers = function (names) {
+                    if (!Array.isArray(names) || names.length === 0) return [];
+                    return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
+                };
+
+                function renderStatusPill() {
+                    const dot = document.getElementById("statusDot");
+                    const label = document.getElementById("statusLabel");
+                    const playersEl = document.getElementById("playerCount");
+                    if (!dot || !label || !playersEl) return;
+
+                    const rawState = liveServerData.state || "offline";
+
+                    let ageMs = Infinity;
+                    const hb = liveServerData.lastHeartbeat;
+                    if (hb) {
+                        ageMs = Date.now() - new Date(hb).getTime();
+                    }
+                    const isStale = ageMs > SERVER_STALE_THRESHOLD_MS;
+
+                    let displayState = rawState;
+                    if ((isStale || !hb) && rawState !== "stopping" && rawState !== "restarting") {
+                        displayState = "offline";
+                    }
+
+                    const stateMap = {
+                        online: { dotClass: "online", text: "Online" },
+                        restarting: { dotClass: "pending", text: "Restarting…" },
+                        stopping: { dotClass: "pending", text: "Stopping…" },
+                        offline: { dotClass: "offline", text: "Offline" }
+                    };
+                    const s = stateMap[displayState] || stateMap.offline;
+
+                    dot.className = "status-dot " + s.dotClass;
+                    label.textContent = s.text;
+
+                    if (displayState === "online") {
+                        const rawNames = liveServerData.playerList || [];
+                        const visibleNames = window.__applyHiddenPlayers(rawNames);
+                        const count = visibleNames.length;
+                        playersEl.textContent =
+                            count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
+                    } else {
+                        playersEl.textContent = "";
+                    }
+                }
+
+                async function pollServerState() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/server-state`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        liveServerData = await res.json();
+                    } catch (err) {
+                        console.error("[server-state] poll failed:", err);
+                        liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                    }
+                    renderStatusPill();
+                }
+
+                async function pollHiddenPlayers() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/hidden-players`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        const hp = Array.isArray(json.hiddenPlayers) ? json.hiddenPlayers : [];
+                        hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
+                        window.dispatchEvent(new Event("afo-hidden-players-updated"));
+                    } catch (err) {
+                        console.error("[hidden-players] poll failed:", err);
+                    }
+                }
+
+                window.addEventListener("afo-hidden-players-updated", renderStatusPill);
+
+                window.loadLiveStatus = function () {
+                    pollServerState();
+                    pollHiddenPlayers();
+                    setInterval(pollServerState, SERVER_STATE_POLL_MS);
+                    setInterval(pollHiddenPlayers, HIDDEN_PLAYERS_POLL_MS);
+                };
+            })();
+        </script>
+
+        <script>
             "use strict";
 
             const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
@@ -1277,8 +1372,6 @@
             }
 
             // ─── LINK AUTO-DETECT ───────────────────────────────────────
-            // Turns any bare URL in a plain-text string into a clickable <a> tag.
-            // Escapes HTML first so we never inject markup from stored text.
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str == null ? "" : String(str);
@@ -1289,7 +1382,6 @@
                 const urlPattern = /((https?:\/\/)[^\s<]+)/gi;
                 return escaped.replace(urlPattern, (match) => {
                     let url = match;
-                    // Strip trailing punctuation that's likely not part of the URL
                     const trailingPunct = /[.,!?;:)\]]+$/;
                     let trail = "";
                     const trailMatch = url.match(trailingPunct);
@@ -1305,15 +1397,9 @@
             const NEWS_QUEUE_KEY = "afo_news_queue";
             const NEWS_POLL_MS = 15 * 1000;
             let carouselIndex = 0;
-            // slides: flattened list of { newsId, title, description, mediaType, mediaUrl }
             let slides = [];
             let newsItems = [];
 
-            /**
-             * Pick the starting slide index for this page load, working at the
-             * news-story level (not the flattened media-slide level) so that a
-             * story with many media items doesn't dominate the shuffle.
-             */
             function pickStartStoryId(items) {
                 if (items.length === 0) return null;
                 if (items.length === 1) return items[0].id;
@@ -1382,7 +1468,6 @@
                 setInterval(refresh, NEWS_POLL_MS);
             }
 
-            // Build a YouTube embed URL from a variety of link formats, or null if not YouTube
             function toYouTubeEmbed(url) {
                 if (!url) return null;
                 const patterns = [
@@ -1401,7 +1486,6 @@
             function buildSlideMedia(item) {
                 const media = Array.isArray(item.media) ? item.media : [];
                 if (media.length === 0) {
-                    // Legacy fallback: old single-image field
                     if (item.imageUrl) return [{ type: "image", url: item.imageUrl }];
                     return [{ type: "image", url: null }];
                 }
@@ -1427,7 +1511,6 @@
                 track.innerHTML = "";
                 dots.innerHTML = "";
 
-                // Flatten: each media item within a story becomes its own slide
                 slides = [];
                 newsItems.forEach((item) => {
                     const mediaList = buildSlideMedia(item);
@@ -1519,7 +1602,6 @@
                     dots.appendChild(dot);
                 });
 
-                // Jump to the first slide of the randomly chosen starting story
                 const startStoryId = pickStartStoryId(newsItems);
                 const startIdx = Math.max(
                     0,
@@ -1544,7 +1626,6 @@
             let serverOnline = true;
             let countdownInterval = null;
 
-            // Downtime is defined by a start + end date instead of minutes.
             function checkServerOnlineStatus(downtimes) {
                 const now = new Date();
                 if (!downtimes || downtimes.length === 0) return null;
@@ -1570,7 +1651,6 @@
                 const totalMinutes = Math.floor(msRemaining / 60000);
                 const totalHours = Math.floor(totalMinutes / 60);
                 const totalDays = Math.floor(totalHours / 24);
-                // Using average month/year lengths for approximation
                 const totalMonths = Math.floor(totalDays / 30.44);
                 const totalYears = Math.floor(totalDays / 365.25);
 
@@ -1655,8 +1735,6 @@
             }
 
             // ─── SERVER INFO (IP box) + BANNER + INFO CARD + DOWNTIMES ───
-            // These now come from four separate REST endpoints instead of one
-            // combined Firestore "serverInfo/main" document.
             const SERVER_INFO_POLL_MS = 15 * 1000;
 
             async function loadServerInfo() {
@@ -1664,7 +1742,6 @@
                     try {
                         const info = await apiGet("/api/server-info");
 
-                        // Server IP: hide the whole box if the value is empty
                         const ipBox = document.getElementById("serverIpBox");
                         const ipEl = document.getElementById("serverIpValue");
                         const ip = (info.serverIp || "").trim();
@@ -1768,14 +1845,13 @@
                     let rangeText = formatDateTime(start);
                     if (dt.endTimestamp) {
                         const end = new Date(dt.endTimestamp);
-                        // Same day? show just end time, else full date
                         const sameDay = start.toDateString() === end.toDateString();
                         rangeText += sameDay ? ` – ${formatTime(end)}` : ` → ${formatDateTime(end)}`;
                     }
 
                     item.innerHTML = `
-                        <span style="font-weight:600;color:var(--text-dark);">${escapeHtml(dt.label || "Maintenance")}</span>
-                        <span style="color:var(--text-medium);">${escapeHtml(rangeText)}</span>`;
+                <span style="font-weight:600;color:var(--text-dark);">${escapeHtml(dt.label || "Maintenance")}</span>
+                <span style="color:var(--text-medium);">${escapeHtml(rangeText)}</span>`;
                     list.appendChild(item);
 
                     const diffHrs = (start - now) / 36e5;
@@ -1814,81 +1890,8 @@
                 document.getElementById(containerId).classList.toggle("open");
             };
 
-            // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
-            // Polls /api/server-state, which already derives online/offline/unknown
-            // on the backend from rconConnected + push staleness (see migration notes).
-            // Hidden-players filtering also happens server-side now, via
-            // /api/hidden-players intersected server-side with the live player list —
-            // but /api/server-state's playerList is NOT pre-filtered, so we filter
-            // client-side here too, same as before.
-            const STATUS_POLL_MS = 2 * 1000;
-            const HIDDEN_PLAYERS_POLL_MS = 10 * 1000;
-            let hiddenPlayersSet = new Set();
-
-            function applyHiddenPlayers(names) {
-                if (!Array.isArray(names) || names.length === 0) return [];
-                return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
-            }
-
-            async function loadHiddenPlayers() {
-                async function refresh() {
-                    try {
-                        const data = await apiGet("/api/hidden-players");
-                        const names = data.hiddenPlayers || [];
-                        hiddenPlayersSet = new Set(names.map((n) => String(n).toLowerCase()));
-                    } catch (_) {}
-                }
-                await refresh();
-                setInterval(refresh, HIDDEN_PLAYERS_POLL_MS);
-            }
-
-            function renderStatusPill(liveStatusData) {
-                const dot = document.getElementById("statusDot");
-                const label = document.getElementById("statusLabel");
-                const playersEl = document.getElementById("playerCount");
-                if (!dot || !label || !playersEl) return;
-
-                // /api/server-state already returns "online" / "offline" / "unknown"
-                // derived server-side (rconConnected + 30s staleness threshold).
-                const state = liveStatusData.state || "offline";
-
-                const stateMap = {
-                    online: { dotClass: "online", text: "Online" },
-                    unknown: { dotClass: "pending", text: "Checking…" },
-                    offline: { dotClass: "offline", text: "Offline" }
-                };
-                const s = stateMap[state] || stateMap.offline;
-
-                dot.className = "status-dot " + s.dotClass;
-                label.textContent = s.text;
-
-                if (state === "online") {
-                    const rawNames = liveStatusData.playerList || [];
-                    const visibleNames = applyHiddenPlayers(rawNames);
-                    const count = visibleNames.length;
-                    playersEl.textContent =
-                        count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
-                } else {
-                    playersEl.textContent = "";
-                }
-            }
-
-            async function loadLiveStatus() {
-                async function refresh() {
-                    try {
-                        const liveStatusData = await apiGet("/api/server-state");
-                        renderStatusPill(liveStatusData);
-                    } catch (_) {
-                        renderStatusPill({ state: "offline", playerList: [] });
-                    }
-                }
-                await refresh();
-                setInterval(refresh, STATUS_POLL_MS);
-            }
-
             // ─── INIT ─────────────────────────────────────────────────
-            loadHiddenPlayers();
-            loadLiveStatus();
+            window.loadLiveStatus();
             loadNews();
             loadServerInfo();
         </script>
