@@ -25,7 +25,7 @@
             content="Welcome to AllForOne SMP! Explore our mods, rules, skin creator, and server stats." />
         <meta name="twitter:image" content="https://allforonesmp.github.io/images/banner.png" />
 
-        <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/banner.png" />
+        <link rel="icon" type="image/png" href="https://allforonesmp.github.io/images/logo.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -165,69 +165,6 @@
             h6 {
                 font-family: "Spectral", serif;
                 font-weight: 700;
-            }
-
-            /* ── NOTIFICATION BANNER ── */
-            #notifBanner {
-                display: none;
-                width: 100%;
-                position: relative;
-                z-index: 100;
-                animation: bannerSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            #notifBanner.visible {
-                display: block;
-            }
-            @keyframes bannerSlideDown {
-                from {
-                    opacity: 0;
-                    transform: translateY(-12px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            .notif-banner-inner {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 1rem;
-                padding: 0.85rem 2rem;
-                flex-wrap: wrap;
-                text-align: center;
-            }
-            .notif-banner-text {
-                font-weight: 600;
-                font-size: 0.97rem;
-                line-height: 1.4;
-                flex: 1;
-                min-width: 0;
-            }
-            .notif-banner-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.4rem;
-                padding: 0.45rem 1.1rem;
-                border-radius: 8px;
-                font-weight: 700;
-                font-size: 0.88rem;
-                text-decoration: none;
-                white-space: nowrap;
-                border: 2px solid rgba(255, 255, 255, 0.5);
-                background: rgba(255, 255, 255, 0.18);
-                color: inherit;
-                transition:
-                    background 0.18s,
-                    border-color 0.18s,
-                    transform 0.15s;
-                cursor: pointer;
-                font-family: "DM Sans", sans-serif;
-            }
-            .notif-banner-btn:hover {
-                background: rgba(255, 255, 255, 0.32);
-                border-color: rgba(255, 255, 255, 0.8);
-                transform: translateY(-1px);
             }
 
             /* ── HERO BANNER ── */
@@ -983,10 +920,6 @@
                 .join-grid {
                     grid-template-columns: 1fr;
                 }
-                .notif-banner-inner {
-                    padding: 0.75rem 1rem;
-                    gap: 0.6rem;
-                }
                 .page-content {
                     padding: 1.25rem;
                 }
@@ -1059,19 +992,6 @@
         </style>
     </head>
     <body>
-        <!-- ── NOTIFICATION BANNER ── -->
-        <div id="notifBanner">
-            <div class="notif-banner-inner" id="notifBannerInner">
-                <span class="notif-banner-text" id="notifBannerText"></span>
-                <a
-                    id="notifBannerBtn"
-                    class="notif-banner-btn"
-                    style="display: none"
-                    target="_blank"
-                    rel="noopener"></a>
-            </div>
-        </div>
-
         <!-- ── HERO BANNER ── -->
         <div class="hero-banner">
             <img id="heroBannerImg" src="https://allforonesmp.github.io/images/banner.png" alt="AllForOne SMP Banner" />
@@ -1264,34 +1184,114 @@
         </footer>
 
         <!-- Firebase -->
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-            import {
-                getFirestore,
-                doc,
-                onSnapshot,
-                collection,
-                orderBy,
-                query
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-            import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        <script>
+            (function () {
+                "use strict";
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyB9N_rkciX2ryVUca-U_RGoe5MtLpUqyyM",
-                authDomain: "allforone-stats.firebaseapp.com",
-                projectId: "allforone-stats",
-                storageBucket: "allforone-stats.firebasestorage.app",
-                messagingSenderId: "235057820326",
-                appId: "1:235057820326:web:ad431f04e3414c94db7a67"
-            };
+                const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+                const SERVER_STATE_POLL_MS = 2 * 1000;
+                const HIDDEN_PLAYERS_POLL_MS = 10 * 1000;
+                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
 
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const rtdb = getDatabase(app);
+                let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                let hiddenPlayersSet = new Set();
+
+                window.__applyHiddenPlayers = function (names) {
+                    if (!Array.isArray(names) || names.length === 0) return [];
+                    return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
+                };
+
+                function renderStatusPill() {
+                    const dot = document.getElementById("statusDot");
+                    const label = document.getElementById("statusLabel");
+                    const playersEl = document.getElementById("playerCount");
+                    if (!dot || !label || !playersEl) return;
+
+                    const rawState = liveServerData.state || "offline";
+
+                    let ageMs = Infinity;
+                    const hb = liveServerData.lastHeartbeat;
+                    if (hb) {
+                        ageMs = Date.now() - new Date(hb).getTime();
+                    }
+                    const isStale = ageMs > SERVER_STALE_THRESHOLD_MS;
+
+                    let displayState = rawState;
+                    if ((isStale || !hb) && rawState !== "stopping" && rawState !== "restarting") {
+                        displayState = "offline";
+                    }
+
+                    const stateMap = {
+                        online: { dotClass: "online", text: "Online" },
+                        restarting: { dotClass: "pending", text: "Restarting…" },
+                        stopping: { dotClass: "pending", text: "Stopping…" },
+                        offline: { dotClass: "offline", text: "Offline" }
+                    };
+                    const s = stateMap[displayState] || stateMap.offline;
+
+                    dot.className = "status-dot " + s.dotClass;
+                    label.textContent = s.text;
+
+                    if (displayState === "online") {
+                        const rawNames = liveServerData.playerList || [];
+                        const visibleNames = window.__applyHiddenPlayers(rawNames);
+                        const count = visibleNames.length;
+                        playersEl.textContent =
+                            count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
+                    } else {
+                        playersEl.textContent = "";
+                    }
+                }
+
+                async function pollServerState() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/server-state`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        liveServerData = await res.json();
+                    } catch (err) {
+                        console.error("[server-state] poll failed:", err);
+                        liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
+                    }
+                    renderStatusPill();
+                }
+
+                async function pollHiddenPlayers() {
+                    try {
+                        const res = await fetch(`${STATS_API_BASE}/api/hidden-players`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        const hp = Array.isArray(json.hiddenPlayers) ? json.hiddenPlayers : [];
+                        hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
+                        window.dispatchEvent(new Event("afo-hidden-players-updated"));
+                    } catch (err) {
+                        console.error("[hidden-players] poll failed:", err);
+                    }
+                }
+
+                window.addEventListener("afo-hidden-players-updated", renderStatusPill);
+
+                window.loadLiveStatus = function () {
+                    pollServerState();
+                    pollHiddenPlayers();
+                    setInterval(pollServerState, SERVER_STATE_POLL_MS);
+                    setInterval(pollHiddenPlayers, HIDDEN_PLAYERS_POLL_MS);
+                };
+            })();
+        </script>
+
+        <script>
+            "use strict";
+
+            const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+
+            // ─── FETCH HELPER ───────────────────────────────────────────
+            async function apiGet(path) {
+                const res = await fetch(`${STATS_API_BASE}${path}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
+                return res.json();
+            }
 
             // ─── LINK AUTO-DETECT ───────────────────────────────────────
-            // Turns any bare URL in a plain-text string into a clickable <a> tag.
-            // Escapes HTML first so we never inject markup from stored text.
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str == null ? "" : String(str);
@@ -1302,7 +1302,6 @@
                 const urlPattern = /((https?:\/\/)[^\s<]+)/gi;
                 return escaped.replace(urlPattern, (match) => {
                     let url = match;
-                    // Strip trailing punctuation that's likely not part of the URL
                     const trailingPunct = /[.,!?;:)\]]+$/;
                     let trail = "";
                     const trailMatch = url.match(trailingPunct);
@@ -1316,16 +1315,11 @@
 
             // ─── NEWS CAROUSEL ──────────────────────────────────────────
             const NEWS_QUEUE_KEY = "afo_news_queue";
+            const NEWS_POLL_MS = 15 * 1000;
             let carouselIndex = 0;
-            // slides: flattened list of { newsId, title, description, mediaType, mediaUrl }
             let slides = [];
             let newsItems = [];
 
-            /**
-             * Pick the starting slide index for this page load, working at the
-             * news-story level (not the flattened media-slide level) so that a
-             * story with many media items doesn't dominate the shuffle.
-             */
             function pickStartStoryId(items) {
                 if (items.length === 0) return null;
                 if (items.length === 1) return items[0].id;
@@ -1380,20 +1374,20 @@
             };
 
             async function loadNews() {
-                try {
-                    const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
-                    onSnapshot(q, (snapshot) => {
-                        newsItems = [];
-                        snapshot.forEach((d) => newsItems.push({ id: d.id, ...d.data() }));
+                async function refresh() {
+                    try {
+                        const data = await apiGet("/api/news");
+                        newsItems = data.news || [];
                         renderCarousel();
-                    });
-                } catch (e) {
-                    document.getElementById("newsLoadingSpinner").style.display = "none";
-                    document.getElementById("newsEmpty").style.display = "block";
+                    } catch (e) {
+                        document.getElementById("newsLoadingSpinner").style.display = "none";
+                        document.getElementById("newsEmpty").style.display = "block";
+                    }
                 }
+                await refresh();
+                setInterval(refresh, NEWS_POLL_MS);
             }
 
-            // Build a YouTube embed URL from a variety of link formats, or null if not YouTube
             function toYouTubeEmbed(url) {
                 if (!url) return null;
                 const patterns = [
@@ -1412,7 +1406,6 @@
             function buildSlideMedia(item) {
                 const media = Array.isArray(item.media) ? item.media : [];
                 if (media.length === 0) {
-                    // Legacy fallback: old single-image field
                     if (item.imageUrl) return [{ type: "image", url: item.imageUrl }];
                     return [{ type: "image", url: null }];
                 }
@@ -1438,7 +1431,6 @@
                 track.innerHTML = "";
                 dots.innerHTML = "";
 
-                // Flatten: each media item within a story becomes its own slide
                 slides = [];
                 newsItems.forEach((item) => {
                     const mediaList = buildSlideMedia(item);
@@ -1530,7 +1522,6 @@
                     dots.appendChild(dot);
                 });
 
-                // Jump to the first slide of the randomly chosen starting story
                 const startStoryId = pickStartStoryId(newsItems);
                 const startIdx = Math.max(
                     0,
@@ -1551,12 +1542,10 @@
             window.carouselPrev = () => goToSlide(carouselIndex - 1);
             window.carouselNext = () => goToSlide(carouselIndex + 1);
 
-            // ─── SERVER STATE ───────────────────────────────────────────
-            let serverData = {};
+            // ─── SERVER STATE (downtime / offline banner logic) ──────────
             let serverOnline = true;
             let countdownInterval = null;
 
-            // Downtime is now defined by a start + end date instead of minutes.
             function checkServerOnlineStatus(downtimes) {
                 const now = new Date();
                 if (!downtimes || downtimes.length === 0) return null;
@@ -1582,7 +1571,6 @@
                 const totalMinutes = Math.floor(msRemaining / 60000);
                 const totalHours = Math.floor(totalMinutes / 60);
                 const totalDays = Math.floor(totalHours / 24);
-                // Using average month/year lengths for approximation
                 const totalMonths = Math.floor(totalDays / 30.44);
                 const totalYears = Math.floor(totalDays / 365.25);
 
@@ -1666,76 +1654,40 @@
                 });
             }
 
-            // ─── HIDDEN PLAYERS ─────────────────────────────────────────
-            // Usernames set here (from the admin panel) never appear as "online" in
-            // the status pill below — for anyone viewing this page. Matching is
-            // case-insensitive. This purely affects display; it does not affect
-            // who can actually join or play.
-            let hiddenPlayersSet = new Set();
-            function applyHiddenPlayers(names) {
-                if (!Array.isArray(names) || names.length === 0) return [];
-                return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
-            }
+            // ─── SERVER INFO (IP box) + INFO CARD + DOWNTIMES ────────────
+            const SERVER_INFO_POLL_MS = 15 * 1000;
 
-            // ─── JOIN CODE & SERVER INFO ────────────────────────────────
             async function loadServerInfo() {
-                onSnapshot(doc(db, "serverInfo", "main"), (snap) => {
-                    if (!snap.exists()) return;
-                    serverData = snap.data();
+                async function refresh() {
+                    try {
+                        const info = await apiGet("/api/server-info");
 
-                    // Keep the hidden-players set current so the status pill can filter live.
-                    const hp = Array.isArray(serverData.hiddenPlayers) ? serverData.hiddenPlayers : [];
-                    hiddenPlayersSet = new Set(hp.map((n) => String(n).toLowerCase()));
+                        const ipBox = document.getElementById("serverIpBox");
+                        const ipEl = document.getElementById("serverIpValue");
+                        const ip = (info.serverIp || "").trim();
+                        if (ip) {
+                            ipEl.textContent = ip;
+                            ipBox.style.display = "block";
+                        } else {
+                            ipBox.style.display = "none";
+                        }
+                    } catch (_) {}
 
-                    // Server IP: hide the whole box if the value is empty
-                    const ipBox = document.getElementById("serverIpBox");
-                    const ipEl = document.getElementById("serverIpValue");
-                    const ip = (serverData.serverIp || "").trim();
-                    if (ip) {
-                        ipEl.textContent = ip;
-                        ipBox.style.display = "block";
-                    } else {
-                        ipBox.style.display = "none";
-                    }
+                    try {
+                        const dtData = await apiGet("/api/downtimes");
+                        const downtimes = dtData.downtimes || [];
+                        const active = checkServerOnlineStatus(downtimes);
+                        applyServerOnlineState(active);
+                        renderDowntimes(downtimes);
+                    } catch (_) {}
 
-                    const active = checkServerOnlineStatus(serverData.downtimes || []);
-                    applyServerOnlineState(active);
-                    renderDowntimes(serverData.downtimes || []);
-
-                    renderNotifBanner(serverData.notifBanner || null);
-                    renderInfoCard(serverData.infoMessage || null);
-
-                    // Hidden-players list can change independently of the live status
-                    // heartbeat, so re-render the pill immediately using the last known
-                    // live data whenever it updates.
-                    renderStatusPill();
-                });
-            }
-
-            // ─── NOTIFICATION BANNER ────────────────────────────────────
-            function renderNotifBanner(banner) {
-                const el = document.getElementById("notifBanner");
-                const inner = document.getElementById("notifBannerInner");
-                const textEl = document.getElementById("notifBannerText");
-                const btnEl = document.getElementById("notifBannerBtn");
-
-                if (!banner || !banner.enabled || !banner.text) {
-                    el.classList.remove("visible");
-                    return;
+                    try {
+                        const info = await apiGet("/api/info-message");
+                        renderInfoCard(info);
+                    } catch (_) {}
                 }
-
-                el.classList.add("visible");
-                inner.style.background = banner.bgColor || "#4a90e2";
-                inner.style.color = banner.textColor || "#ffffff";
-                textEl.textContent = banner.text;
-
-                if (banner.btnText && banner.btnLink) {
-                    btnEl.textContent = banner.btnText;
-                    btnEl.href = banner.btnLink;
-                    btnEl.style.display = "inline-flex";
-                } else {
-                    btnEl.style.display = "none";
-                }
+                await refresh();
+                setInterval(refresh, SERVER_INFO_POLL_MS);
             }
 
             // ─── INFO CARD (replaces Voice Chat card) ────────────────────
@@ -1780,14 +1732,13 @@
                     let rangeText = formatDateTime(start);
                     if (dt.endTimestamp) {
                         const end = new Date(dt.endTimestamp);
-                        // Same day? show just end time, else full date
                         const sameDay = start.toDateString() === end.toDateString();
                         rangeText += sameDay ? ` – ${formatTime(end)}` : ` → ${formatDateTime(end)}`;
                     }
 
                     item.innerHTML = `
-                        <span style="font-weight:600;color:var(--text-dark);">${escapeHtml(dt.label || "Maintenance")}</span>
-                        <span style="color:var(--text-medium);">${escapeHtml(rangeText)}</span>`;
+                <span style="font-weight:600;color:var(--text-dark);">${escapeHtml(dt.label || "Maintenance")}</span>
+                <span style="color:var(--text-medium);">${escapeHtml(rangeText)}</span>`;
                     list.appendChild(item);
 
                     const diffHrs = (start - now) / 36e5;
@@ -1826,74 +1777,8 @@
                 document.getElementById(containerId).classList.toggle("open");
             };
 
-            // ─── LIVE SERVER STATUS PILL ─────────────────────────────────
-            const STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
-            const STATUS_RECHECK_MS = 2 * 1000; // re-evaluate staleness every 2s for prompt detection
-            let liveStatusData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
-            let statusRecheckInterval = null;
-
-            function loadLiveStatus() {
-                onSnapshot(doc(db, "serverStatus", "live"), (snap) => {
-                    if (snap.exists()) {
-                        liveStatusData = snap.data();
-                    } else {
-                        liveStatusData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
-                    }
-                    renderStatusPill();
-                });
-
-                if (statusRecheckInterval) clearInterval(statusRecheckInterval);
-                statusRecheckInterval = setInterval(renderStatusPill, STATUS_RECHECK_MS);
-            }
-
-            function renderStatusPill() {
-                const dot = document.getElementById("statusDot");
-                const label = document.getElementById("statusLabel");
-                const playersEl = document.getElementById("playerCount");
-                if (!dot || !label || !playersEl) return;
-
-                const rawState = liveStatusData.state || "offline";
-
-                let ageMs = Infinity;
-                const hb = liveStatusData.lastHeartbeat;
-                if (hb) {
-                    const hbMillis = typeof hb.toMillis === "function" ? hb.toMillis() : new Date(hb).getTime();
-                    ageMs = Date.now() - hbMillis;
-                }
-                const isStale = ageMs > STALE_THRESHOLD_MS;
-
-                // If there's no heartbeat at all, or it's stale, force offline —
-                // regardless of what "state" says — unless it's mid-transition.
-                let displayState = rawState;
-                if ((isStale || !hb) && rawState !== "stopping" && rawState !== "restarting") {
-                    displayState = "offline";
-                }
-
-                const stateMap = {
-                    online: { dotClass: "online", text: "Online" },
-                    restarting: { dotClass: "pending", text: "Restarting…" },
-                    stopping: { dotClass: "pending", text: "Stopping…" },
-                    offline: { dotClass: "offline", text: "Offline" }
-                };
-                const s = stateMap[displayState] || stateMap.offline;
-
-                dot.className = "status-dot " + s.dotClass;
-                label.textContent = s.text;
-
-                if (displayState === "online") {
-                    const rawNames = liveStatusData.playerList || [];
-                    const visibleNames = applyHiddenPlayers(rawNames);
-                    const count = visibleNames.length;
-                    playersEl.textContent =
-                        count > 0 ? `${count} online: ${visibleNames.join(", ")}` : "No players online";
-                } else {
-                    playersEl.textContent = "";
-                }
-            }
-
-            loadLiveStatus();
-
             // ─── INIT ─────────────────────────────────────────────────
+            window.loadLiveStatus();
             loadNews();
             loadServerInfo();
         </script>
