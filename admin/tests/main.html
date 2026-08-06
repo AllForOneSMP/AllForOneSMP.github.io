@@ -25,7 +25,7 @@
             content="Welcome to AllForOne SMP! Explore our mods, rules, skin creator, and server stats." />
         <meta name="twitter:image" content="https://allforonesmp.github.io/images/banner.png" />
 
-        <link rel="icon" type="image/x-icon" href="https://allforonesmp.github.io/images/banner.png" />
+        <link rel="icon" type="image/png" href="https://allforonesmp.github.io/images/logo.png" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -165,69 +165,6 @@
             h6 {
                 font-family: "Spectral", serif;
                 font-weight: 700;
-            }
-
-            /* ── NOTIFICATION BANNER ── */
-            #notifBanner {
-                display: none;
-                width: 100%;
-                position: relative;
-                z-index: 100;
-                animation: bannerSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            #notifBanner.visible {
-                display: block;
-            }
-            @keyframes bannerSlideDown {
-                from {
-                    opacity: 0;
-                    transform: translateY(-12px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            .notif-banner-inner {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 1rem;
-                padding: 0.85rem 2rem;
-                flex-wrap: wrap;
-                text-align: center;
-            }
-            .notif-banner-text {
-                font-weight: 600;
-                font-size: 0.97rem;
-                line-height: 1.4;
-                flex: 1;
-                min-width: 0;
-            }
-            .notif-banner-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.4rem;
-                padding: 0.45rem 1.1rem;
-                border-radius: 8px;
-                font-weight: 700;
-                font-size: 0.88rem;
-                text-decoration: none;
-                white-space: nowrap;
-                border: 2px solid rgba(255, 255, 255, 0.5);
-                background: rgba(255, 255, 255, 0.18);
-                color: inherit;
-                transition:
-                    background 0.18s,
-                    border-color 0.18s,
-                    transform 0.15s;
-                cursor: pointer;
-                font-family: "DM Sans", sans-serif;
-            }
-            .notif-banner-btn:hover {
-                background: rgba(255, 255, 255, 0.32);
-                border-color: rgba(255, 255, 255, 0.8);
-                transform: translateY(-1px);
             }
 
             /* ── HERO BANNER ── */
@@ -983,10 +920,6 @@
                 .join-grid {
                     grid-template-columns: 1fr;
                 }
-                .notif-banner-inner {
-                    padding: 0.75rem 1rem;
-                    gap: 0.6rem;
-                }
                 .page-content {
                     padding: 1.25rem;
                 }
@@ -1059,19 +992,6 @@
         </style>
     </head>
     <body>
-        <!-- ── NOTIFICATION BANNER ── -->
-        <div id="notifBanner">
-            <div class="notif-banner-inner" id="notifBannerInner">
-                <span class="notif-banner-text" id="notifBannerText"></span>
-                <a
-                    id="notifBannerBtn"
-                    class="notif-banner-btn"
-                    style="display: none"
-                    target="_blank"
-                    rel="noopener"></a>
-            </div>
-        </div>
-
         <!-- ── HERO BANNER ── -->
         <div class="hero-banner">
             <img id="heroBannerImg" src="https://allforonesmp.github.io/images/banner.png" alt="AllForOne SMP Banner" />
@@ -1734,7 +1654,7 @@
                 });
             }
 
-            // ─── SERVER INFO (IP box) + BANNER + INFO CARD + DOWNTIMES ───
+            // ─── SERVER INFO (IP box) + INFO CARD + DOWNTIMES ────────────
             const SERVER_INFO_POLL_MS = 15 * 1000;
 
             async function loadServerInfo() {
@@ -1762,45 +1682,12 @@
                     } catch (_) {}
 
                     try {
-                        const banner = await apiGet("/api/banner");
-                        renderNotifBanner(banner);
-                    } catch (_) {}
-
-                    try {
                         const info = await apiGet("/api/info-message");
                         renderInfoCard(info);
                     } catch (_) {}
                 }
                 await refresh();
                 setInterval(refresh, SERVER_INFO_POLL_MS);
-            }
-
-            // ─── NOTIFICATION BANNER ────────────────────────────────────
-            function renderNotifBanner(banner) {
-                const el = document.getElementById("notifBanner");
-                const inner = document.getElementById("notifBannerInner");
-                const textEl = document.getElementById("notifBannerText");
-                const btnEl = document.getElementById("notifBannerBtn");
-
-                if (!banner || !banner.enabled || !banner.text) {
-                    el.classList.remove("visible");
-                    return;
-                }
-
-                el.classList.add("visible");
-                inner.style.background = banner.bgColor || "#4a90e2";
-                inner.style.color = banner.textColor || "#ffffff";
-                textEl.textContent = banner.text;
-
-                if (banner.btnLabel && banner.btnLink) {
-                    btnEl.textContent = banner.btnLabel;
-                    btnEl.href = banner.btnLink;
-                    if (banner.btnBgColor) btnEl.style.background = banner.btnBgColor;
-                    if (banner.btnTextColor) btnEl.style.color = banner.btnTextColor;
-                    btnEl.style.display = "inline-flex";
-                } else {
-                    btnEl.style.display = "none";
-                }
             }
 
             // ─── INFO CARD (replaces Voice Chat card) ────────────────────
