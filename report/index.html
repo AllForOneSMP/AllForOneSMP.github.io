@@ -683,6 +683,25 @@
                     </div>
 
                     <div class="field-group">
+                        <label class="field-label">Which dimension did this happen in?<span class="required">*</span></label>
+                        <div class="radio-pill-row" id="dimensionGroup">
+                            <label class="radio-pill">
+                                <input type="radio" name="dimension" value="overworld" />
+                                <span>Overworld</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="dimension" value="nether" />
+                                <span>Nether</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="dimension" value="end" />
+                                <span>End</span>
+                            </label>
+                        </div>
+                        <div class="field-error" id="err-dimension">Please select an option.</div>
+                    </div>
+
+                    <div class="field-group">
                         <label class="field-label" for="reportedUsername">Who are you reporting?<span class="required">*</span></label>
                         <input class="field-input" type="text" id="reportedUsername" name="reportedUsername" placeholder="Player username" autocomplete="off" />
                         <div class="field-error" id="err-reportedUsername">Please enter the player you're reporting.</div>
@@ -875,6 +894,10 @@
                 showFieldError("coords", !coordsOk);
                 if (!coordsOk) valid = false;
 
+                const dimension = document.querySelector('input[name="dimension"]:checked');
+                showFieldError("dimension", !dimension);
+                if (!dimension) valid = false;
+
                 const reportedUsername = document.getElementById("reportedUsername").value.trim();
                 markInvalid(document.getElementById("reportedUsername"), !reportedUsername);
                 showFieldError("reportedUsername", !reportedUsername);
@@ -919,6 +942,7 @@
                 fd.append("coordX", document.getElementById("coordX").value.trim());
                 fd.append("coordY", document.getElementById("coordY").value.trim());
                 fd.append("coordZ", document.getElementById("coordZ").value.trim());
+                fd.append("dimension", document.querySelector('input[name="dimension"]:checked').value);
                 fd.append("details", document.getElementById("details").value.trim());
                 fd.append("submittedAt", new Date().toISOString());
                 selectedFiles.forEach((f) => fd.append("evidence", f, f.name));
