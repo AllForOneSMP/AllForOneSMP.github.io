@@ -368,6 +368,7 @@
             }
             .file-list-item {
                 display: flex;
+                flex-wrap: wrap;
                 align-items: center;
                 gap: 0.75rem;
                 background: var(--lighter-blue);
@@ -409,6 +410,36 @@
             .file-remove-btn:hover {
                 background: var(--border-color);
                 color: var(--error);
+            }
+            .file-replay-time {
+                flex-basis: 100%;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-top: 0.15rem;
+                padding-top: 0.5rem;
+                border-top: 1px dashed var(--border-color);
+            }
+            .file-replay-time label {
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: var(--text-medium);
+                white-space: nowrap;
+            }
+            .file-replay-time input {
+                flex: 1;
+                min-width: 0;
+                font-family: "DM Sans", sans-serif;
+                font-size: 0.82rem;
+                color: var(--text-dark);
+                background: var(--white);
+                border: 2px solid var(--border-color);
+                border-radius: 8px;
+                padding: 0.4rem 0.6rem;
+                outline: none;
+            }
+            .file-replay-time input:focus {
+                border-color: var(--primary-blue);
             }
 
             /* ── PROGRESS BAR ── */
