@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -792,7 +792,7 @@
         </style>
     </head>
     <body>
-        <!-- ── LOGIN ── -->
+        
         <div class="login-screen" id="loginScreen">
             <div class="login-card">
                 <h2>Admin Panel</h2>
@@ -809,7 +809,7 @@
             </div>
         </div>
 
-        <!-- ── ADMIN APP ── -->
+        
         <div id="adminApp">
             <div class="admin-header">
                 <span class="logo">AllForOne SMP<span>Admin Panel</span></span>
@@ -819,7 +819,7 @@
             </div>
 
             <div class="admin-layout">
-                <!-- NOTIFICATION BANNER SECTION -->
+                
                 <div>
                     <div class="section-title">Notification Banner</div>
                     <div class="card">
@@ -938,7 +938,7 @@
                     </div>
                 </div>
 
-                <!-- INFO MESSAGE SECTION (replaces Voice Chat) -->
+                
                 <div>
                     <div class="section-title">Info Message</div>
                     <div class="card">
@@ -983,7 +983,7 @@
                     </div>
                 </div>
 
-                <!-- JOIN CODE SECTION -->
+                
                 <div>
                     <div class="section-title">Join Code &amp; Server Info</div>
                     <div class="card">
@@ -1003,7 +1003,7 @@
                     </div>
                 </div>
 
-                <!-- HIDDEN PLAYERS SECTION -->
+                
                 <div>
                     <div class="section-title">Hidden Players</div>
                     <div class="card">
@@ -1042,7 +1042,7 @@
                     </div>
                 </div>
 
-                <!-- DOWNTIME SECTION -->
+                
                 <div>
                     <div class="section-title">Server Downtime</div>
                     <div class="card">
@@ -1089,7 +1089,7 @@
                     </div>
                 </div>
 
-                <!-- NEWS SECTION -->
+                
                 <div>
                     <div class="section-title">News Posts</div>
                     <div class="card">
@@ -1190,15 +1190,15 @@
             </div>
         </div>
 
-        <!-- Toast -->
+        
         <div id="toast" class="toast"></div>
 
         <script>
-            // Admin panel — Firebase (Firestore + Realtime DB) fully removed.
-            // Talks to the self-hosted backend at STATS_API_BASE for everything:
-            // login/session, server info, banner, info message, hidden players,
-            // downtimes, and news. Cloudinary upload logic is unchanged (that was
-            // never Firebase — media files still upload straight from the browser).
+            
+            
+            
+            
+            
             "use strict";
 
             const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
@@ -1206,17 +1206,17 @@
             const CLOUDINARY_CLOUD_NAME = "dgrmpcha9";
             const CLOUDINARY_UPLOAD_PRESET = "AllForOne Posts";
 
-            // Strict aspect ratio enforced for news images: 16:9
+            
             const REQUIRED_RATIO = 16 / 9;
-            const RATIO_TOLERANCE = 0.01; // small tolerance for rounding
+            const RATIO_TOLERANCE = 0.01; 
 
-            // Session token, kept in memory only (not localStorage/sessionStorage)
-            // so a browser restart always requires logging in again, as requested.
+            
+            
             let authToken = null;
 
-            // Poll intervals for the various admin sub-panels. These replace
-            // Firestore's onSnapshot live updates — slightly less "instant", but
-            // there's normally only one admin using this panel at a time.
+            
+            
+            
             const HIDDEN_PLAYERS_POLL_MS = 5 * 1000;
             const DOWNTIMES_POLL_MS = 10 * 1000;
             const NEWS_POLL_MS = 10 * 1000;
@@ -1235,26 +1235,26 @@
                 return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
-            // ─── FETCH HELPER ───────────────────────────────────────────
-            // Wraps fetch with the JSON content type + bearer token, and
-            // surfaces a clear "please log in again" toast if the token has
-            // expired or is otherwise rejected, rather than failing silently.
-            //
-            // FIX: the previous version called res.json() separately for the
-            // success and failure branches. If a 200 OK response ever came
-            // back with a body that wasn't clean JSON (empty body, trailing
-            // whitespace, an HTML page injected by a proxy/tunnel, etc.) the
-            // res.json() call would throw INSIDE what should have been the
-            // "success" path. That exception then propagated up into the
-            // caller's catch block, which showed an "Error" toast / left the
-            // button stuck on "Saving…" even though the request had already
-            // been applied successfully server-side. This is almost
-            // certainly what you were seeing with the banner and server-info
-            // saves.
-            //
-            // Now we read the body once as text, try to parse JSON only for
-            // display purposes, and ONLY treat the call as failed when
-            // res.ok is actually false.
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             async function apiFetch(path, options = {}) {
                 const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
                 if (authToken) headers.Authorization = `Bearer ${authToken}`;
@@ -1263,9 +1263,9 @@
                 try {
                     res = await fetch(`${STATS_API_BASE}${path}`, { ...options, headers });
                 } catch (networkErr) {
-                    // fetch() itself failed — DNS, CORS, the Tailscale Funnel
-                    // hop being down, etc. This really is a failure; the
-                    // request never made it to the server.
+                    
+                    
+                    
                     throw new Error(`Could not reach server: ${networkErr.message}`);
                 }
 
@@ -1281,8 +1281,8 @@
                     try {
                         parsed = JSON.parse(rawText);
                     } catch (_) {
-                        // Body wasn't valid JSON. Only a real problem if the
-                        // request also failed (handled below).
+                        
+                        
                     }
                 }
 
@@ -1291,15 +1291,15 @@
                     throw new Error(errMsg);
                 }
 
-                // Success — return parsed JSON if we got any, otherwise null.
-                // Covers 204 No Content, empty 200 bodies, and any other
-                // non-JSON-but-still-successful response.
+                
+                
+                
                 return parsed;
             }
 
-            // ─── PASSWORD / LOGIN ───────────────────────────────────────
-            // Password is now verified server-side via bcrypt on the backend -
-            // the browser never knows or checks the real password itself.
+            
+            
+            
             window.checkPassword = async function () {
                 const pw = document.getElementById("passwordInput").value.trim();
                 if (!pw) return;
@@ -1340,7 +1340,7 @@
                 loadHiddenPlayers();
             }
 
-            // ─── CLOUDINARY (unchanged — never used Firebase) ──────────
+            
             async function uploadToCloudinary(file, resourceType) {
                 const fd = new FormData();
                 fd.append("file", file);
@@ -1355,7 +1355,7 @@
                 return data.secure_url;
             }
 
-            // ─── BANNER ───────────────────────────────────────────────
+            
             window.togglePage = function (btn) {
                 btn.classList.toggle("selected");
             };
@@ -1384,8 +1384,8 @@
                 }
             };
 
-            // FIX: reset moved into a `finally` block so the button can
-            // never get stuck on "Saving…", no matter what throws.
+            
+            
             window.saveBanner = async function () {
                 const btn = document.querySelector('[onclick="saveBanner()"]');
                 btn.textContent = "Saving…";
@@ -1437,7 +1437,7 @@
                 }
             }
 
-            // ─── INFO MESSAGE ─────────────────────────────────────────
+            
             window.saveInfoMessage = async function () {
                 const btn = document.querySelector('[onclick="saveInfoMessage()"]');
                 btn.textContent = "Saving…";
@@ -1471,7 +1471,7 @@
                 }
             }
 
-            // ─── JOIN CODE / SERVER INFO ──────────────────────────────
+            
             async function loadCurrentServerInfo() {
                 try {
                     const d = await apiFetch("/api/server-info");
@@ -1502,7 +1502,7 @@
                 }
             };
 
-            // ─── HIDDEN PLAYERS ─────────────────────────────────────────
+            
             let currentHiddenPlayers = [];
             function loadHiddenPlayers() {
                 async function refresh() {
@@ -1511,7 +1511,7 @@
                         currentHiddenPlayers = (data && data.hiddenPlayers) || [];
                         renderHiddenPlayerList();
                     } catch (_) {
-                        // apiFetch already surfaces a toast on real failures
+                        
                     }
                 }
                 refresh();
@@ -1566,7 +1566,7 @@
                 }
             }
 
-            // ─── DOWNTIMES ────────────────────────────────────────────
+            
             let currentDowntimes = [];
             function loadDowntimes() {
                 async function refresh() {
@@ -1647,11 +1647,11 @@
                 }
             }
 
-            // ─── NEWS: MEDIA STAGING (unchanged logic, still Cloudinary) ──
-            // pendingMedia holds items to be attached to the news post being created/edited.
-            // Each item: { type: 'image'|'video-file'|'video-link', url, file (optional, pre-upload), previewUrl }
+            
+            
+            
             let pendingMedia = [];
-            let editingNewsId = null; // null = creating new
+            let editingNewsId = null; 
             let currentNewsList = [];
 
             function getImageDimensions(file) {
@@ -1704,7 +1704,7 @@
                 const input = document.getElementById("newsVideoLinkInput");
                 const url = input.value.trim();
                 if (!url) return;
-                if (!/^https?:\/\//i.test(url)) {
+                if (!/^https?:\/\
                     showToast("Video link must start with http:// or https://", "error");
                     return;
                 }
@@ -1752,7 +1752,7 @@
                 });
             }
 
-            // ─── NEWS: PUBLISH / EDIT / DELETE ─────────────────────────
+            
             function loadNews() {
                 async function refresh() {
                     try {
@@ -1835,11 +1835,11 @@
                 document.getElementById("newsCancelEditBtn").style.display = "none";
             }
 
-            // FIX: reset moved into `finally`, and the "what should the
-            // button say when we're done" logic no longer relies on
-            // comparing against the in-flight "Publishing…" label (that
-            // comparison was always false, so edits incorrectly reset the
-            // button to "Publish News" instead of "Save Changes").
+            
+            
+            
+            
+            
             window.submitNews = async function () {
                 const title = document.getElementById("newsTitle").value.trim();
                 const description = document.getElementById("newsDescription").value.trim();
@@ -1852,7 +1852,7 @@
                 btn.textContent = "Publishing…";
                 btn.disabled = true;
                 try {
-                    // Upload any new files, keep existing URLs as-is
+                    
                     const resolvedMedia = [];
                     for (const item of pendingMedia) {
                         if (item.type === "image") {
@@ -1904,7 +1904,7 @@
                 }
             };
 
-            // ─── UTIL ─────────────────────────────────────────────────
+            
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str == null ? "" : String(str);

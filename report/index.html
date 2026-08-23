@@ -13,7 +13,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -611,7 +611,7 @@
         </style>
     </head>
     <body>
-        <!-- ── THEME TOGGLE (no navbar on this page) ── -->
+        
         <div class="theme-switch-wrap">
             <label class="theme-switch" for="themeToggleInput">
                 <span class="theme-switch-label" id="themeSwitchLabel">Light</span>
@@ -782,9 +782,9 @@
 
             const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
             const MAX_FILES = 5;
-            const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+            const MAX_FILE_SIZE = 100 * 1024 * 1024; 
 
-            // ── theme switch label sync ──
+            
             function syncThemeLabel() {
                 const isDark = document.documentElement.getAttribute("data-theme") === "dark";
                 document.getElementById("themeSwitchLabel").textContent = isDark ? "Dark" : "Light";
@@ -793,13 +793,13 @@
             syncThemeLabel();
             new MutationObserver(syncThemeLabel).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-            // ── witnesses conditional field ──
+            
             document.getElementById("witnessesGroup").addEventListener("change", (e) => {
                 const val = e.target.value;
                 document.getElementById("witnessNamesGroup").style.display = val === "yes" ? "block" : "none";
             });
 
-            // ── file upload handling ──
+            
             let selectedFiles = [];
             const fileDrop = document.getElementById("fileDrop");
             const fileInput = document.getElementById("fileInput");
@@ -884,7 +884,7 @@
                 if (e.dataTransfer.files?.length) addFiles(Array.from(e.dataTransfer.files));
             });
 
-            // ── validation ──
+            
             function showFieldError(id, show) {
                 const errEl = document.getElementById("err-" + id);
                 if (errEl) errEl.classList.toggle("visible", show);
@@ -937,7 +937,7 @@
                 return valid;
             }
 
-            // ── submit via XHR (for real upload progress) ──
+            
             const form = document.getElementById("reportForm");
             const submitBtn = document.getElementById("submitBtn");
             const submitBtnText = document.getElementById("submitBtnText");

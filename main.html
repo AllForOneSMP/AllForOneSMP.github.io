@@ -33,7 +33,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -992,13 +992,13 @@
         </style>
     </head>
     <body>
-        <!-- ── HERO BANNER ── -->
+        
         <div class="hero-banner">
             <img id="heroBannerImg" src="https://allforonesmp.github.io/images/banner.png" alt="AllForOne SMP Banner" />
             <div class="hero-overlay"></div>
         </div>
 
-        <!-- ── PAGE CONTENT ── -->
+        
         <div class="page-content">
             <section class="news-section">
                 <div class="section-title">Latest News</div>
@@ -1039,7 +1039,7 @@
                             Read the Server Rules
                         </a>
 
-                        <!-- Shown when server is currently offline -->
+                        
                         <div class="server-offline-block" id="serverOfflineBlock">
                             <img
                                 src="https://allforonesmp.github.io/images/logo.png"
@@ -1065,7 +1065,7 @@
                                 </label>
                             </div>
                             <div class="code-reveal" id="codeReveal">
-                                <!-- Server IP box: hidden entirely when serverIp is empty -->
+                                
                                 <div class="connection-id-box" id="serverIpBox" style="display: none">
                                     <div class="label">Server IP</div>
                                     <div class="code-value" id="serverIpValue">—</div>
@@ -1104,7 +1104,7 @@
                             </div>
                         </div>
 
-                        <!-- Application form: collapsible dropdown, responsive embed -->
+                        
                         <div class="form-container" id="formContainer">
                             <div class="form-header" onclick="toggleForm('formContainer')">
                                 <h4>Apply / Whitelist Form</h4>
@@ -1123,7 +1123,7 @@
                             </div>
                         </div>
 
-                        <!-- How To Join: collapsible dropdown with numbered steps -->
+                        
                         <div class="form-container" id="howToJoinContainer">
                             <div class="form-header" onclick="toggleForm('howToJoinContainer')">
                                 <h4>How To Join</h4>
@@ -1183,7 +1183,7 @@
             </p>
         </footer>
 
-        <!-- Firebase -->
+        
         <script>
             (function () {
                 "use strict";
@@ -1191,7 +1191,7 @@
                 const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
                 const SERVER_STATE_POLL_MS = 2 * 1000;
                 const HIDDEN_PLAYERS_POLL_MS = 10 * 1000;
-                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
+                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; 
 
                 let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
                 let hiddenPlayersSet = new Set();
@@ -1284,14 +1284,14 @@
 
             const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
 
-            // ─── FETCH HELPER ───────────────────────────────────────────
+            
             async function apiGet(path) {
                 const res = await fetch(`${STATS_API_BASE}${path}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
                 return res.json();
             }
 
-            // ─── LINK AUTO-DETECT ───────────────────────────────────────
+            
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str == null ? "" : String(str);
@@ -1313,7 +1313,7 @@
                 });
             }
 
-            // ─── NEWS CAROUSEL ──────────────────────────────────────────
+            
             const NEWS_QUEUE_KEY = "afo_news_queue";
             const NEWS_POLL_MS = 15 * 1000;
             let carouselIndex = 0;
@@ -1542,7 +1542,7 @@
             window.carouselPrev = () => goToSlide(carouselIndex - 1);
             window.carouselNext = () => goToSlide(carouselIndex + 1);
 
-            // ─── SERVER STATE (downtime / offline banner logic) ──────────
+            
             let serverOnline = true;
             let countdownInterval = null;
 
@@ -1654,7 +1654,7 @@
                 });
             }
 
-            // ─── SERVER INFO (IP box) + INFO CARD + DOWNTIMES ────────────
+            
             const SERVER_INFO_POLL_MS = 15 * 1000;
 
             async function loadServerInfo() {
@@ -1690,7 +1690,7 @@
                 setInterval(refresh, SERVER_INFO_POLL_MS);
             }
 
-            // ─── INFO CARD (replaces Voice Chat card) ────────────────────
+            
             function renderInfoCard(info) {
                 const card = document.getElementById("infoCard");
                 const titleEl = document.getElementById("infoCardTitle");
@@ -1706,7 +1706,7 @@
                 card.classList.add("visible");
             }
 
-            // ─── DOWNTIMES ──────────────────────────────────────────────
+            
             function renderDowntimes(downtimes) {
                 const list = document.getElementById("downtimeList");
                 const alert = document.getElementById("downtimeAlert");
@@ -1777,7 +1777,7 @@
                 document.getElementById(containerId).classList.toggle("open");
             };
 
-            // ─── INIT ─────────────────────────────────────────────────
+            
             window.loadLiveStatus();
             loadNews();
             loadServerInfo();

@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spectral:wght@600;700&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -588,7 +588,7 @@
 
             const originalHTML = content.innerHTML;
 
-            // Build a flat index of searchable blocks: each card and each list item.
+            
             function buildIndex() {
                 const blocks = [];
                 document.querySelectorAll("#mainContent .card").forEach((card) => {
@@ -620,7 +620,7 @@
             function runSearch() {
                 const query = input.value.trim();
 
-                // Reset in-page highlights each time before re-applying.
+                
                 content.innerHTML = originalHTML;
 
                 if (!query) {
@@ -689,7 +689,7 @@
             }
 
             function scrollToMatch(result, query) {
-                // Re-run highlighting fresh against the live DOM so we can locate the matching card/element.
+                
                 content.innerHTML = originalHTML;
                 highlightInNode(content, query);
 

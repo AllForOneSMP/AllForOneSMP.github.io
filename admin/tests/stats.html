@@ -10,7 +10,7 @@
             href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Spectral:wght@700&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -653,31 +653,31 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
-        <!-- Firebase: live Minecraft server state (online / restarting / stopping / offline). -->
-        <!-- Same source the homepage's status pill uses — this is the actual game-server state, -->
-        <!-- separate from the "Reporting Live/Offline" pill above, which reflects this page's own -->
-        <!-- self-hosted reporter/API pipeline health. -->
-        <!-- NOTE: this project (allforonemedia-9a7d8) is intentionally left as-is per request. -->
+        
+        
+        
+        
+        
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
-        <!-- Live Minecraft server state (online / restarting / stopping / offline) -->
-        <!-- and hidden-players list, both now served from the same self-hosted API -->
-        <!-- that already powers the CPU/RAM/players stats below. Firebase removed. -->
+        
+        
+        
         <script>
             (function () {
                 "use strict";
 
                 const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
-                const SERVER_STATE_POLL_MS = 2 * 1000; // matches old Firestore recheck cadence
-                const HIDDEN_PLAYERS_POLL_MS = 10 * 1000; // this rarely changes, poll gently
-                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; // offline if no heartbeat update in 10s
+                const SERVER_STATE_POLL_MS = 2 * 1000; 
+                const HIDDEN_PLAYERS_POLL_MS = 10 * 1000; 
+                const SERVER_STALE_THRESHOLD_MS = 10 * 1000; 
 
                 let liveServerData = { state: "offline", lastHeartbeat: null, playersOnline: 0, playerList: [] };
                 let hiddenPlayersSet = new Set();
 
-                // Exposed globally so the main stats script below (and this file's own
-                // renderer) can filter player names/counts consistently.
+                
+                
                 window.__applyHiddenPlayers = function (names) {
                     if (!Array.isArray(names) || names.length === 0) return [];
                     return names.filter((n) => !hiddenPlayersSet.has(String(n).toLowerCase()));
@@ -749,9 +749,9 @@
                     }
                 }
 
-                // Re-render this pill whenever the hidden-players list changes, so
-                // filtering applies immediately rather than waiting for the next
-                // server-state poll.
+                
+                
+                
                 window.addEventListener("afo-hidden-players-updated", renderServerStatusPill);
 
                 pollServerState();
@@ -765,38 +765,38 @@
             (function () {
                 "use strict";
 
-                // ---------------------------------------------------------------------
-                // CONFIG
-                // ---------------------------------------------------------------------
+                
+                
+                
                 const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
-                const LIVE_POLL_MS = 1 * 1000; // how often to refresh "latest" (matches reporter's 5s push interval)
-                const HISTORY_POLL_MS = 60 * 1000; // how often to refresh history charts
-                const STALE_THRESHOLD_MS = 3 * 60 * 1000; // flag stale if no update in 3 min
+                const LIVE_POLL_MS = 1 * 1000; 
+                const HISTORY_POLL_MS = 60 * 1000; 
+                const STALE_THRESHOLD_MS = 3 * 60 * 1000; 
 
                 let currentRangeHours = 1;
                 let lastSuccessAt = null;
                 let charts = { cpu: null, ram: null, net: null, players: null };
-                let historyRequestSeq = 0; // guards against a slow older request overwriting a newer one
-                let lastHistoryRows = []; // cached so we can redraw charts on a theme change without refetching
-                let lastLatestData = null; // cached so we can re-render player info when the hidden list changes
+                let historyRequestSeq = 0; 
+                let lastHistoryRows = []; 
+                let lastLatestData = null; 
 
-                // ---------------------------------------------------------------------
-                // THEME-AWARE CHART COLORS
-                // ---------------------------------------------------------------------
+                
+                
+                
                 function chartGridColor() {
                     return getComputedStyle(document.documentElement).getPropertyValue("--chart-grid").trim() || "#e8f4f8";
                 }
                 function chartTickColor() {
                     return getComputedStyle(document.documentElement).getPropertyValue("--chart-tick").trim() || "#718096";
                 }
-                // Called when the theme changes (via the message listener in <head>) so
-                // existing charts get redrawn with grid/tick colors matching the new theme.
+                
+                
                 window.__refreshChartsForTheme = function () {
                     renderHistory(lastHistoryRows);
                 };
 
-                // Re-render "latest" player info and the players chart whenever the
-                // hidden-players list changes, without waiting for the next poll.
+                
+                
                 window.addEventListener("afo-hidden-players-updated", function () {
                     if (lastLatestData) renderLatest(lastLatestData);
                     renderHistory(lastHistoryRows);
@@ -806,9 +806,9 @@
                     return window.__applyHiddenPlayers ? window.__applyHiddenPlayers(names) : names || [];
                 }
 
-                // ---------------------------------------------------------------------
-                // HELPERS
-                // ---------------------------------------------------------------------
+                
+                
+                
                 function formatUptime(sec) {
                     if (sec == null) return "—";
                     const d = Math.floor(sec / 86400);
@@ -850,24 +850,24 @@
                     document.querySelectorAll(".range-btn").forEach((b) => (b.disabled = visible));
                 }
 
-                // ---------------------------------------------------------------------
-                // RENDER: current stats
-                // ---------------------------------------------------------------------
+                
+                
+                
                 function renderLatest(data) {
                     lastLatestData = data;
 
-                    // uptime: API sends uptime.systemSeconds / uptime.serviceSeconds
+                    
                     const uptimeSec = data.uptime?.systemSeconds ?? data.uptime?.serviceSeconds ?? null;
                     document.getElementById("uptimeValue").textContent = formatUptime(uptimeSec);
 
-                    // cpu: API sends cpu.percent (object), not a plain number
+                    
                     const cpu = data.cpu?.percent ?? 0;
                     document.getElementById("cpuValue").innerHTML = `${cpu}<span class="unit">%</span>`;
                     const cpuMeter = document.getElementById("cpuMeter");
                     cpuMeter.style.width = Math.min(100, cpu) + "%";
                     cpuMeter.className = "meter-fill " + meterClass(cpu);
 
-                    // memory: API sends memory.usedPercent / memory.usedGB / memory.totalGB
+                    
                     const mem = data.memory || {};
                     const ramPct = mem.usedPercent ?? 0;
                     document.getElementById("ramValue").innerHTML = `${ramPct}<span class="unit">%</span>`;
@@ -879,12 +879,12 @@
                             `${mem.usedGB.toFixed(1)} GB / ${mem.totalGB.toFixed(1)} GB`;
                     }
 
-                    // players: filter out hidden usernames from both the list and the count
+                    
                     const players = data.players || {};
                     const rawNames = players.names;
                     const visibleNames = rawNames == null ? null : applyHiddenPlayers(rawNames);
                     const count = visibleNames == null ? players.count : visibleNames.length;
-                    const max = players.max; // not present in current payload; stays undefined, which is fine
+                    const max = players.max; 
                     document.getElementById("playersValue").innerHTML =
                         (count == null ? "—" : count) + (max != null ? `<span class="unit">/${max}</span>` : "");
                     document.getElementById("playersCountBadge").textContent = count == null ? "?" : count;
@@ -910,9 +910,9 @@
                     setStaleBanner(false);
                 }
 
-                // ---------------------------------------------------------------------
-                // RENDER: history charts
-                // ---------------------------------------------------------------------
+                
+                
+                
                 function buildChart(canvasId, datasets, emptyElId, yMax) {
                     const canvas = document.getElementById(canvasId);
                     const empty = document.getElementById(emptyElId);
@@ -932,7 +932,7 @@
                     };
                     if (yMax != null) {
                         yScale.max = yMax;
-                        // Whole-number ticks make sense for a small integer range like player count
+                        
                         yScale.ticks = { color: tickColor, stepSize: 1 };
                     }
 
@@ -968,7 +968,7 @@
                     if (charts.net) charts.net.destroy();
                     if (charts.players) charts.players.destroy();
 
-                    // cpu: nested shape, same as /api/live (cpu.percent)
+                    
                     const cpuData = rows
                         .filter((r) => r.cpu?.percent != null)
                         .map((r) => ({ x: r.ts, y: r.cpu.percent }));
@@ -979,7 +979,7 @@
                         100
                     );
 
-                    // memory: nested shape, same as /api/live (memory.usedPercent)
+                    
                     const ramData = rows
                         .filter((r) => r.memory?.usedPercent != null)
                         .map((r) => ({ x: r.ts, y: r.memory.usedPercent }));
@@ -1005,10 +1005,10 @@
                         "netEmpty"
                     );
 
-                    // players: recompute count per history row using the current hidden-players
-                    // list. History rows only store a count (not names), so if any hidden
-                    // players happen to be in the raw count we can't subtract them out
-                    // retroactively — this affects the live figures above, which do have names.
+                    
+                    
+                    
+                    
                     const playerData = rows
                         .filter((r) => r.players && r.players.count != null)
                         .map((r) => ({ x: r.ts, y: r.players.count }));
@@ -1027,9 +1027,9 @@
                     );
                 }
 
-                // ---------------------------------------------------------------------
-                // DATA FETCHING
-                // ---------------------------------------------------------------------
+                
+                
+                
                 async function fetchLatest() {
                     try {
                         const res = await fetch(`${STATS_API_BASE}/api/live`);
@@ -1048,15 +1048,15 @@
                 }
 
                 async function fetchHistory(hours) {
-                    // Tag this request so a slow, superseded fetch can't clobber a newer one's
-                    // result or hide the loading state after a fresher click already resolved.
+                    
+                    
                     const seq = ++historyRequestSeq;
                     setHistoryLoading(true);
                     try {
                         const res = await fetch(`${STATS_API_BASE}/api/history?hours=${hours}`);
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const json = await res.json();
-                        if (seq !== historyRequestSeq) return; // a newer range was selected meanwhile
+                        if (seq !== historyRequestSeq) return; 
                         renderHistory(json.data || []);
                     } catch (err) {
                         console.error("[stats] fetchHistory failed:", err);
@@ -1073,9 +1073,9 @@
                     }
                 }
 
-                // ---------------------------------------------------------------------
-                // RANGE TOGGLE
-                // ---------------------------------------------------------------------
+                
+                
+                
                 document.querySelectorAll(".range-btn").forEach((btn) => {
                     btn.addEventListener("click", () => {
                         document.querySelectorAll(".range-btn").forEach((b) => b.classList.remove("active"));
@@ -1085,17 +1085,17 @@
                     });
                 });
 
-                // ---------------------------------------------------------------------
-                // INIT
-                // ---------------------------------------------------------------------
-                // Run initial calls immediately
+                
+                
+                
+                
                 fetchLatest();
                 fetchHistory(currentRangeHours);
 
-                // Set up the recurring intervals
+                
                 setInterval(fetchLatest, LIVE_POLL_MS);
                 setInterval(() => fetchHistory(currentRangeHours), HISTORY_POLL_MS);
-                setInterval(checkStale, 30 * 1000); // 30 seconds
+                setInterval(checkStale, 30 * 1000); 
             })();
         </script>
 

@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -485,7 +485,7 @@
                 <p>Upload a skin file, tell us the model, and we'll give you the exact command to type in-game.</p>
             </div>
 
-            <!-- STEP 1: UPLOAD -->
+            
             <div class="card">
                 <div class="step-heading">
                     <span class="step-pill">1</span>
@@ -516,7 +516,7 @@
                 <div class="error-text" id="fileError"></div>
             </div>
 
-            <!-- STEP 2: SKIN TYPE -->
+            
             <div class="card">
                 <div class="step-heading" id="step2Heading">
                     <span class="step-pill">2</span>
@@ -536,7 +536,7 @@
                 <p class="hint">Not sure? Most skins downloaded without saying "slim" are Classic.</p>
             </div>
 
-            <!-- STEP 3: SUBMIT -->
+            
             <div class="card">
                 <div class="step-heading" id="step3Heading">
                     <span class="step-pill">3</span>
@@ -551,7 +551,7 @@
                 </div>
             </div>
 
-            <!-- STEP 4: RESULT -->
+            
             <div class="card" id="resultCard" style="display: none">
                 <div class="step-heading">
                     <span class="step-pill">✓</span>
@@ -653,7 +653,7 @@
                 const ctx = canvas.getContext("2d");
                 ctx.imageSmoothingEnabled = false;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                // Draw the face (front head) region, standard skin layout: head at 8,8 sized 8x8
+                
                 if (w >= 64 && h >= 32) {
                     const scaleX = w / 64;
                     const scaleY = h / 64 >= 0.5 ? h / 32 : h / 64;

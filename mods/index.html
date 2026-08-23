@@ -10,7 +10,7 @@
             href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Spectral:wght@700&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -722,7 +722,7 @@
 
             <div class="section-title">Mod List</div>
             <div class="filter-bar" id="filterBar">
-                <!-- Filter chips populated dynamically -->
+                
             </div>
             <div id="modsEmptyState" class="empty-state" style="display: none">
                 No mods have been added yet. Check back soon.
@@ -733,9 +733,9 @@
                 <a id="toggleAdminLink">Admin login</a>
             </div>
 
-            <!-- ============================= ADMIN SECTION ============================= -->
+            
             <div id="adminSection">
-                <!-- Logged out: login form -->
+                
                 <div id="loginView">
                     <div class="login-card">
                         <h2>Admin Login</h2>
@@ -754,7 +754,7 @@
                     </div>
                 </div>
 
-                <!-- Logged in: mod management -->
+                
                 <div id="manageView" style="display: none">
                     <div class="admin-header">
                         <h2>Manage Mods</h2>
@@ -871,28 +871,28 @@
             const db = getFirestore(app);
             const auth = getAuth(app);
 
-            // Only this account is allowed to manage mods. This is a UX convenience —
-            // the actual enforcement happens in Firestore security rules, which must
-            // independently restrict writes to this same email. Never rely on this
-            // client-side check alone.
+            
+            
+            
+            
             const ADMIN_EMAIL = "kaioliver111@gmail.com";
 
-            // ---------------------------------------------------------------------
-            // STATE
-            // ---------------------------------------------------------------------
+            
+            
+            
             let currentUser = null;
-            let allMods = []; // cached from Firestore snapshot, used by both public + admin views
-            let allTags = []; // cached from Firestore snapshot: { id, name }
-            let editingModId = null; // set when editing an existing mod
-            let selectedTagIds = new Set(); // tags checked in the admin mod form
-            let activeFilterTagId = null; // currently active public filter, or null for "All"
+            let allMods = []; 
+            let allTags = []; 
+            let editingModId = null; 
+            let selectedTagIds = new Set(); 
+            let activeFilterTagId = null; 
 
             const modsCollection = collection(db, "mods");
             const tagsCollection = collection(db, "modTags");
 
-            // ---------------------------------------------------------------------
-            // HELPERS
-            // ---------------------------------------------------------------------
+            
+            
+            
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str || "";
@@ -910,9 +910,9 @@
                 el.textContent = "";
             }
 
-            // ---------------------------------------------------------------------
-            // TAG HELPERS
-            // ---------------------------------------------------------------------
+            
+            
+            
             function tagNameById(tagId) {
                 const tag = allTags.find((t) => t.id === tagId);
                 return tag ? tag.name : null;
@@ -924,9 +924,9 @@
                 return tagIds.includes(activeFilterTagId);
             }
 
-            // ---------------------------------------------------------------------
-            // PUBLIC FILTER BAR RENDER
-            // ---------------------------------------------------------------------
+            
+            
+            
             function renderFilterBar() {
                 const bar = document.getElementById("filterBar");
 
@@ -986,9 +986,9 @@
                 }
             }
 
-            // ---------------------------------------------------------------------
-            // PUBLIC MOD LIST RENDER
-            // ---------------------------------------------------------------------
+            
+            
+            
             function renderPublicMods() {
                 const grid = document.getElementById("modsGrid");
                 const empty = document.getElementById("modsEmptyState");
@@ -1033,9 +1033,9 @@
                     .join("");
             }
 
-            // ---------------------------------------------------------------------
-            // ADMIN MOD LIST RENDER
-            // ---------------------------------------------------------------------
+            
+            
+            
             function renderAdminMods() {
                 const list = document.getElementById("adminModList");
                 const empty = document.getElementById("adminModsEmpty");
@@ -1078,9 +1078,9 @@
                 });
             }
 
-            // ---------------------------------------------------------------------
-            // FIRESTORE: live mods subscription (shared by public + admin views)
-            // ---------------------------------------------------------------------
+            
+            
+            
             function subscribeMods() {
                 const q = query(modsCollection, orderBy("createdAt", "desc"));
                 onSnapshot(
@@ -1102,7 +1102,7 @@
                     q,
                     (snap) => {
                         allTags = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-                        // If the tag currently used to filter the public grid was deleted, reset to "All".
+                        
                         if (activeFilterTagId && !allTags.some((t) => t.id === activeFilterTagId)) {
                             activeFilterTagId = null;
                         }
@@ -1120,9 +1120,9 @@
                 );
             }
 
-            // ---------------------------------------------------------------------
-            // ADMIN: TAG PICKER (multi-select on the mod form)
-            // ---------------------------------------------------------------------
+            
+            
+            
             function renderTagPicker() {
                 const picker = document.getElementById("tagPicker");
                 if (allTags.length === 0) {
@@ -1152,9 +1152,9 @@
                 });
             }
 
-            // ---------------------------------------------------------------------
-            // ADMIN: EXISTING TAGS LIST (manage tags card — rename/delete)
-            // ---------------------------------------------------------------------
+            
+            
+            
             function renderExistingTagsList() {
                 const list = document.getElementById("existingTagsList");
                 const emptyNote = document.getElementById("tagsEmptyNote");
@@ -1251,8 +1251,8 @@
                     await deleteDoc(doc(db, "modTags", tagId));
                     selectedTagIds.delete(tagId);
 
-                    // Best-effort cleanup: strip this tag from any mods that reference it,
-                    // so the admin list and public filters don't show a dangling tag id.
+                    
+                    
                     const affectedMods = allMods.filter((m) => (m.tagIds || []).includes(tagId));
                     await Promise.all(
                         affectedMods.map((m) =>
@@ -1267,11 +1267,11 @@
                 }
             }
 
-            // ---------------------------------------------------------------------
-            // URL VALIDATION
-            // ---------------------------------------------------------------------
+            
+            
+            
             function isValidHttpUrl(str) {
-                if (!str) return true; // empty is allowed (optional field)
+                if (!str) return true; 
                 try {
                     const u = new URL(str);
                     return u.protocol === "http:" || u.protocol === "https:";
@@ -1280,9 +1280,9 @@
                 }
             }
 
-            // ---------------------------------------------------------------------
-            // FORM: add / edit mod
-            // ---------------------------------------------------------------------
+            
+            
+            
             function resetForm() {
                 editingModId = null;
                 document.getElementById("editingModId").value = "";
@@ -1388,9 +1388,9 @@
                 }
             });
 
-            // ---------------------------------------------------------------------
-            // DELETE MOD
-            // ---------------------------------------------------------------------
+            
+            
+            
             async function deleteMod(modId) {
                 const mod = allMods.find((m) => m.id === modId);
                 if (!mod) return;
@@ -1405,9 +1405,9 @@
                 }
             }
 
-            // ---------------------------------------------------------------------
-            // AUTH
-            // ---------------------------------------------------------------------
+            
+            
+            
             document.getElementById("toggleAdminLink").addEventListener("click", () => {
                 const section = document.getElementById("adminSection");
                 section.classList.toggle("visible");
@@ -1439,7 +1439,7 @@
                         errorEl.textContent = "This account isn't authorized to manage mods.";
                         errorEl.classList.add("visible");
                     }
-                    // Otherwise onAuthStateChanged handles the view swap
+                    
                 } catch (err) {
                     console.error("[mods] login failed:", err);
                     let msg = "Login failed. Check your email and password.";
@@ -1482,9 +1482,9 @@
                 }
             });
 
-            // ---------------------------------------------------------------------
-            // INIT
-            // ---------------------------------------------------------------------
+            
+            
+            
             subscribeMods();
             subscribeTags();
         </script>

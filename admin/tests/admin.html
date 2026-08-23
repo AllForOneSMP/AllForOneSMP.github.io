@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Spectral:wght@600;700&family=Bebas+Neue&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
+        
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -792,7 +792,7 @@
         </style>
     </head>
     <body>
-        <!-- ── LOGIN ── -->
+        
         <div class="login-screen" id="loginScreen">
             <div class="login-card">
                 <h2>Admin Panel</h2>
@@ -809,7 +809,7 @@
             </div>
         </div>
 
-        <!-- ── ADMIN APP ── -->
+        
         <div id="adminApp">
             <div class="admin-header">
                 <span class="logo">AllForOne SMP<span>Admin Panel</span></span>
@@ -819,7 +819,7 @@
             </div>
 
             <div class="admin-layout">
-                <!-- NOTIFICATION BANNER SECTION -->
+                
                 <div>
                     <div class="section-title">Notification Banner</div>
                     <div class="card">
@@ -938,7 +938,7 @@
                     </div>
                 </div>
 
-                <!-- INFO MESSAGE SECTION (replaces Voice Chat) -->
+                
                 <div>
                     <div class="section-title">Info Message</div>
                     <div class="card">
@@ -983,7 +983,7 @@
                     </div>
                 </div>
 
-                <!-- JOIN CODE SECTION -->
+                
                 <div>
                     <div class="section-title">Join Code &amp; Server Info</div>
                     <div class="card">
@@ -1003,7 +1003,7 @@
                     </div>
                 </div>
 
-                <!-- HIDDEN PLAYERS SECTION -->
+                
                 <div>
                     <div class="section-title">Hidden Players</div>
                     <div class="card">
@@ -1042,7 +1042,7 @@
                     </div>
                 </div>
 
-                <!-- DOWNTIME SECTION -->
+                
                 <div>
                     <div class="section-title">Server Downtime</div>
                     <div class="card">
@@ -1089,7 +1089,7 @@
                     </div>
                 </div>
 
-                <!-- NEWS SECTION -->
+                
                 <div>
                     <div class="section-title">News Posts</div>
                     <div class="card">
@@ -1211,15 +1211,15 @@
             </div>
         </div>
 
-        <!-- Toast -->
+        
         <div id="toast" class="toast"></div>
 
         <script>
-            // Admin panel — Firebase (Firestore + Realtime DB) fully removed.
-            // Talks to the self-hosted backend at STATS_API_BASE for everything:
-            // login/session, server info, banner, info message, hidden players,
-            // downtimes, and news. Cloudinary upload logic is unchanged (that was
-            // never Firebase — media files still upload straight from the browser).
+            
+            
+            
+            
+            
             "use strict";
 
             const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
@@ -1227,17 +1227,17 @@
             const CLOUDINARY_CLOUD_NAME = "dgrmpcha9";
             const CLOUDINARY_UPLOAD_PRESET = "AllForOne Posts";
 
-            // Strict aspect ratio enforced for news images: 16:9
+            
             const REQUIRED_RATIO = 16 / 9;
-            const RATIO_TOLERANCE = 0.01; // small tolerance for rounding
+            const RATIO_TOLERANCE = 0.01; 
 
-            // Session token, kept in memory only (not localStorage/sessionStorage)
-            // so a browser restart always requires logging in again, as requested.
+            
+            
             let authToken = null;
 
-            // Poll intervals for the various admin sub-panels. These replace
-            // Firestore's onSnapshot live updates — slightly less "instant", but
-            // there's normally only one admin using this panel at a time.
+            
+            
+            
             const HIDDEN_PLAYERS_POLL_MS = 5 * 1000;
             const DOWNTIMES_POLL_MS = 10 * 1000;
             const NEWS_POLL_MS = 10 * 1000;
@@ -1256,7 +1256,7 @@
                 return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }
 
-            // ─── FETCH HELPER ───────────────────────────────────────────
+            
             async function apiFetch(path, options = {}) {
                 const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
                 if (authToken) headers.Authorization = `Bearer ${authToken}`;
@@ -1280,8 +1280,8 @@
                     try {
                         parsed = JSON.parse(rawText);
                     } catch (_) {
-                        // Body wasn't valid JSON. Only a real problem if the
-                        // request also failed (handled below).
+                        
+                        
                     }
                 }
 
@@ -1293,7 +1293,7 @@
                 return parsed;
             }
 
-            // ─── PASSWORD / LOGIN ───────────────────────────────────────
+            
             window.checkPassword = async function () {
                 const pw = document.getElementById("passwordInput").value.trim();
                 if (!pw) return;
@@ -1334,10 +1334,10 @@
                 loadHiddenPlayers();
             }
 
-            // ─── CLOUDINARY ─────────────────────────────────────────────
-            // Uses XMLHttpRequest (instead of fetch) so we get real upload
-            // progress events, and surfaces Cloudinary's actual error
-            // message on failure instead of a generic "upload failed".
+            
+            
+            
+            
             function uploadToCloudinary(file, resourceType, onProgress) {
                 return new Promise((resolve, reject) => {
                     const type = resourceType || "auto";
@@ -1371,7 +1371,7 @@
                 });
             }
 
-            // ─── BANNER ───────────────────────────────────────────────
+            
             window.togglePage = function (btn) {
                 btn.classList.toggle("selected");
             };
@@ -1451,7 +1451,7 @@
                 }
             }
 
-            // ─── INFO MESSAGE ─────────────────────────────────────────
+            
             window.saveInfoMessage = async function () {
                 const btn = document.querySelector('[onclick="saveInfoMessage()"]');
                 btn.textContent = "Saving…";
@@ -1485,7 +1485,7 @@
                 }
             }
 
-            // ─── JOIN CODE / SERVER INFO ──────────────────────────────
+            
             async function loadCurrentServerInfo() {
                 try {
                     const d = await apiFetch("/api/server-info");
@@ -1516,7 +1516,7 @@
                 }
             };
 
-            // ─── HIDDEN PLAYERS ─────────────────────────────────────────
+            
             let currentHiddenPlayers = [];
             function loadHiddenPlayers() {
                 async function refresh() {
@@ -1525,7 +1525,7 @@
                         currentHiddenPlayers = (data && data.hiddenPlayers) || [];
                         renderHiddenPlayerList();
                     } catch (_) {
-                        // apiFetch already surfaces a toast on real failures
+                        
                     }
                 }
                 refresh();
@@ -1580,7 +1580,7 @@
                 }
             }
 
-            // ─── DOWNTIMES ────────────────────────────────────────────
+            
             let currentDowntimes = [];
             function loadDowntimes() {
                 async function refresh() {
@@ -1661,11 +1661,11 @@
                 }
             }
 
-            // ─── NEWS: MEDIA STAGING ────────────────────────────────────
-            // pendingMedia holds items to be attached to the news post being created/edited.
-            // Each item: { type: 'image'|'video-file'|'video-link', url, file (optional, pre-upload), previewUrl }
+            
+            
+            
             let pendingMedia = [];
-            let editingNewsId = null; // null = creating new
+            let editingNewsId = null; 
             let currentNewsList = [];
 
             function getImageDimensions(file) {
@@ -1718,7 +1718,7 @@
                 const input = document.getElementById("newsVideoLinkInput");
                 const url = input.value.trim();
                 if (!url) return;
-                if (!/^https?:\/\//i.test(url)) {
+                if (!/^https?:\/\
                     showToast("Video link must start with http:// or https://", "error");
                     return;
                 }
@@ -1766,7 +1766,7 @@
                 });
             }
 
-            // ─── NEWS: PUBLISH / EDIT / DELETE ─────────────────────────
+            
             function loadNews() {
                 async function refresh() {
                     try {
@@ -1849,11 +1849,11 @@
                 document.getElementById("newsCancelEditBtn").style.display = "none";
             }
 
-            // Publishes the news item. Uploads any staged files to Cloudinary
-            // first (in sequence, so the progress bar reads cleanly), then
-            // saves the post via the backend. Progress bar + button state
-            // are always reset in `finally`, so a failed upload can never
-            // leave the UI stuck on "Publishing…".
+            
+            
+            
+            
+            
             window.submitNews = async function () {
                 const title = document.getElementById("newsTitle").value.trim();
                 const description = document.getElementById("newsDescription").value.trim();
@@ -1885,7 +1885,7 @@
                 }
 
                 try {
-                    // Upload any new files, keep existing URLs as-is
+                    
                     const resolvedMedia = [];
                     let uploadIdx = 0;
                     for (const item of pendingMedia) {
@@ -1949,7 +1949,7 @@
                 }
             };
 
-            // ─── UTIL ─────────────────────────────────────────────────
+            
             function escapeHtml(str) {
                 const div = document.createElement("div");
                 div.textContent = str == null ? "" : String(str);
