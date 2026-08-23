@@ -11,7 +11,7 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Spectral:wght@600;700&display=swap"
             rel="stylesheet" />
 
-        
+        <!-- ── THEME (dark/light) — synced with the site shell via localStorage + postMessage ── -->
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -32,8 +32,8 @@
                 document.addEventListener("DOMContentLoaded", function () {
                     apply(getStored() || "light");
                 });
-                
-                
+                // The shell (when this page is loaded inside its iframe) broadcasts
+                // theme changes here so this page stays in sync without polling.
                 window.addEventListener("message", function (e) {
                     if (e.data && e.data.type === "afo-theme") {
                         setStored(e.data.theme);
@@ -526,7 +526,7 @@
                             <span class="chevron">▾</span>
                         </button>
                         <div class="faq-answer-wrap"><div class="faq-answer-inner"><div class="faq-answer">
-                            No whitelist is required. The server is open &mdash; just connect using the IP and you're in.
+                            Yes, you have to apply for the server on this google form: <a href="https://forms.gle/6g5k1Z7v8X9y3Q2F9" target="_blank">https://forms.gle/6g5k1Z7v8X9y3Q2F9</a>. Once your application is approved, you'll be added to the whitelist and can join the server.
                         </div></div></div>
                     </div>
                 </div>
@@ -754,7 +754,7 @@
 
             let activeCategory = "All";
 
-            
+            // Build an index of every FAQ item: question + answer text.
             function buildIndex() {
                 const items = [];
                 document.querySelectorAll(".faq-item").forEach((el) => {
@@ -780,7 +780,7 @@
 
             const index = buildIndex();
 
-            
+            // Build category chips dynamically from data-category attributes.
             function buildChips() {
                 const categories = ["All", ...new Set(index.map((i) => i.category))];
                 chipRow.innerHTML = "";
@@ -814,7 +814,7 @@
                 const query = input.value.trim();
                 const re = query ? new RegExp(escapeRe(query), "gi") : null;
 
-                
+                // Clear any prior in-page highlights.
                 index.forEach((item) => resetHighlight(item.el));
 
                 let visibleCount = 0;
@@ -832,7 +832,7 @@
                     }
                 });
 
-                
+                // Hide/show cards with zero visible items.
                 document.querySelectorAll(".card").forEach((card) => {
                     const hasVisible = card.querySelector(".faq-item:not(.item-hidden)");
                     card.classList.toggle("item-hidden", !hasVisible && card.querySelectorAll(".faq-item").length > 0);
@@ -912,7 +912,7 @@
             }
 
             function jumpToItem(result) {
-                
+                // Make sure the item's card/category is visible even if a different chip was active.
                 if (activeCategory !== "All" && result.category !== activeCategory) {
                     activeCategory = "All";
                     Array.from(chipRow.children).forEach((c) => c.classList.toggle("active", c.textContent === "All"));
@@ -939,7 +939,7 @@
                     const text = document.createTextNode(mark.textContent);
                     mark.parentNode.replaceChild(text, mark);
                 });
-                
+                // Normalize adjacent text nodes back together.
                 el.querySelectorAll(".faq-question, .faq-answer").forEach((n) => n.normalize && n.normalize());
                 el.normalize();
             }
