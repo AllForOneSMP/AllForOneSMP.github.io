@@ -33,7 +33,6 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Spectral:wght@600;700&display=swap"
             rel="stylesheet" />
 
-        <!-- ── THEME (dark/light) — apply before first paint to avoid flash ── -->
         <script>
             (function () {
                 var STORAGE_KEY = "afo_theme";
@@ -76,7 +75,7 @@
                 --border-color: #d4e8f0;
                 --white: #ffffff;
                 --nav-height: 64px;
-                --banner-height: 0px; /* updated by JS */
+                --banner-height: 0px;
                 --safe-top: env(safe-area-inset-top, 0px);
                 --safe-bottom: env(safe-area-inset-bottom, 0px);
                 --safe-left: env(safe-area-inset-left, 0px);
@@ -116,10 +115,9 @@
 
             button {
                 touch-action: manipulation;
-                font-size: 16px; /* prevents iOS zoom on focus */
+                font-size: 16px;
             }
 
-            /* ─── NAV ─── */
             nav {
                 position: fixed;
                 top: 0;
@@ -229,7 +227,6 @@
                 right: 12px;
             }
 
-            /* ─── THEME TOGGLE (nav) ─── */
             .theme-toggle-row {
                 display: inline-flex;
                 align-items: center;
@@ -283,7 +280,6 @@
                 content: "\1F319";
             }
 
-            /* ─── HAMBURGER ─── */
             .hamburger {
                 display: none;
                 flex-direction: column;
@@ -323,7 +319,6 @@
                 transform: translateY(-7.5px) rotate(-45deg);
             }
 
-            /* ─── NOTIFICATION BANNER ─── */
             #notifBanner {
                 position: fixed;
                 top: calc(var(--nav-height) + var(--safe-top));
@@ -400,7 +395,6 @@
                 opacity: 1;
             }
 
-            /* ─── MOBILE DRAWER ─── */
             .drawer {
                 position: fixed;
                 top: calc(var(--nav-height) + var(--safe-top));
@@ -475,7 +469,6 @@
                 font-weight: 500;
             }
 
-            /* ─── CONTENT AREA ─── */
             .content-shell {
                 position: fixed;
                 top: calc(var(--nav-height) + var(--safe-top) + var(--banner-height));
@@ -520,7 +513,6 @@
                 background: var(--white);
             }
 
-            /* ─── LOADING SHIMMER ─── */
             .frame-loader {
                 position: absolute;
                 inset: 0;
@@ -562,7 +554,6 @@
                 letter-spacing: 0.02em;
             }
 
-            /* ─── RIPPLE ─── */
             .ripple-overlay {
                 position: fixed;
                 inset: 0;
@@ -584,7 +575,6 @@
                 }
             }
 
-            /* ─── RESPONSIVE BREAKPOINTS ─── */
             @media (max-width: 900px) {
                 .nav-links button {
                     font-size: 0.9rem;
@@ -616,7 +606,6 @@
                     font-size: 0.8rem;
                     padding: 0.3rem 0.85rem;
                 }
-                /* Move the toggle into the drawer on mobile; hide the nav-bar copy */
                 .nav-theme-toggle {
                     display: none;
                 }
@@ -635,7 +624,6 @@
                 }
             }
 
-            /* Landscape phones: shrink nav a bit to save vertical space */
             @media (max-height: 420px) and (orientation: landscape) {
                 :root {
                     --nav-height: 52px;
@@ -694,7 +682,6 @@
             </div>
         </nav>
 
-        <!-- Notification Banner -->
         <div id="notifBanner">
             <div class="banner-inner" id="bannerInner">
                 <span class="banner-text" id="bannerText"></span>
@@ -703,7 +690,6 @@
             </div>
         </div>
 
-        <!-- Mobile Drawer -->
         <div class="drawer" id="drawer">
             <ul class="drawer-links" id="drawerLinks">
                 <li><button data-path="/" onclick="navigate('/', event); closeDrawer()">Home</button></li>
@@ -743,57 +729,42 @@
         <div class="content-shell" id="contentShell"></div>
 
         <script>
-            // ── Recursion guard ─────────────────────────────────────────
-            // If this shell is itself running inside one of its own
-            // iframes (i.e. a route page like main.html mistakenly
-            // contains a full copy of this navbar), stop immediately
-            // instead of spawning another nested navbar+iframe forever.
             (function () {
                 try {
                     var depth = 0;
                     var win = window;
                     while (win !== win.parent) {
                         try {
-                            // Only counts if the parent frame is running the
-                            // same app (same origin required to introspect it).
                             if (win.parent.document && win.parent.document.getElementById("contentShell")) {
                                 depth++;
                             }
                         } catch (_) {
-                            // Cross-origin parent — can't introspect, so we
-                            // can't confirm nesting; stop counting here.
                             break;
                         }
                         win = win.parent;
-                        if (depth > 2) break; // safety bound on the walk itself
+                        if (depth > 2) break;
                     }
                     if (depth >= 1) {
                         document.documentElement.innerHTML =
                             '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#4a5568;text-align:center;padding:2rem;">' +
                             "This page (" +
                             window.location.pathname +
-                            ") contains the site navbar and was loaded inside another navbar frame, " +
-                            "which would nest infinitely. Remove the &lt;nav&gt;/iframe-shell markup from this page \u2014 " +
+                            ") contains the site navbar and was loaded inside another navbar frame. " +
                             "route pages should only contain their own content." +
                             "</div>";
                         throw new Error("AllForOne SMP: blocked recursive navbar nesting");
                     }
                 } catch (e) {
                     if (e && e.message && e.message.indexOf("blocked recursive navbar nesting") !== -1) throw e;
-                    // Any other error (e.g. sandboxed iframe with no parent
-                    // access at all) just means we can't check — proceed
-                    // normally rather than breaking legitimate top-level loads.
                 }
             })();
         </script>
 
-        <!-- Banner config, now polled from the self-hosted backend instead of -->
-        <!-- a Firebase Firestore listener. Firebase removed entirely. -->
         <script>
             (function () {
                 "use strict";
                 const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
-                const BANNER_POLL_MS = 15 * 1000; // banner config rarely changes; poll gently
+                const BANNER_POLL_MS = 15 * 1000;
 
                 async function pollBanner() {
                     try {
@@ -829,11 +800,9 @@
                 "/admin": "Admin | AllForOne SMP",
                 "/stats": "🤓 | AllForOne SMP"
             };
-            const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
-            const EXIT_DURATION = 320; // must be >= slot exit transition time
+            const REFRESH_INTERVAL = 2 * 60 * 1000;
+            const EXIT_DURATION = 320;
 
-            // Only these pages get auto-refreshed every REFRESH_INTERVAL;
-            // all other pages load once and stay as-is.
             const AUTO_REFRESH_PATHS = ["/", "/rules"];
 
             const shell = document.getElementById("contentShell");
@@ -854,10 +823,6 @@
             window._currentPath = "/";
             window._bannerConfig = null;
 
-            // ── Theme: broadcast to iframes (cross-origin, so postMessage only) ──
-            // The route pages listen for { type: "afo-theme", theme } and re-apply
-            // + persist to their own localStorage. This keeps every open frame in
-            // sync with whatever the user picks in the shell's nav/drawer toggle.
             function sendThemeToFrame(path) {
                 const frame = frames[path];
                 if (!frame) return;
@@ -869,13 +834,10 @@
             function broadcastThemeToAllFrames() {
                 Object.keys(frames).forEach(sendThemeToFrame);
             }
-            // Wrap the theme setter (defined in <head>) so that toggling here also
-            // pushes the change into every iframe that's currently loaded.
             (function () {
                 const base = window.__setTheme;
                 window.__setTheme = function (theme) {
                     base(theme);
-                    // Keep both nav + drawer toggles in sync with each other
                     const a = document.getElementById("themeToggleInput");
                     const b = document.getElementById("themeToggleInputMobile");
                     if (a) a.checked = theme === "dark";
@@ -891,7 +853,6 @@
                 if (b) b.checked = isDark;
             });
 
-            // ── Banner ──────────────────────────────────────────────────
             function applyBanner(path) {
                 const cfg = window._bannerConfig;
                 const bannerText = document.getElementById("bannerText");
@@ -908,20 +869,17 @@
                     return;
                 }
 
-                // Check if this page should show the banner
                 const pages = cfg.pages || [];
                 if (pages.length > 0 && !pages.includes(path)) {
                     hide();
                     return;
                 }
 
-                // Apply colours
                 bannerInner.style.backgroundColor = cfg.bgColor || "#4a90e2";
                 bannerInner.style.color = cfg.textColor || "#ffffff";
                 bannerClose.style.color = cfg.textColor || "#ffffff";
                 bannerText.textContent = cfg.text || "";
 
-                // Button
                 if (cfg.btnLabel && cfg.btnLink) {
                     bannerBtn.textContent = cfg.btnLabel;
                     bannerBtn.href = cfg.btnLink;
@@ -933,9 +891,6 @@
                 }
 
                 notifBanner.classList.add("visible");
-                // Measure real height after layout, and keep it accurate if
-                // the text wraps differently (e.g. on resize/zoom) by
-                // observing the inner element while the banner is visible.
                 requestAnimationFrame(() => {
                     updateBannerHeight(bannerInner.offsetHeight);
                 });
@@ -964,11 +919,7 @@
                 updateBannerHeight(0);
             };
 
-            // ── Page title ───────────────────────────────────────────────
             function updateTitle(path) {
-                // Try reading iframe title; fallback to our map.
-                // Same-origin/cross-origin access can throw — always fall
-                // back gracefully instead of leaving a stale title.
                 const frame = frames[path];
                 let iframeTitle = null;
                 try {
@@ -979,14 +930,10 @@
                 document.title = iframeTitle && iframeTitle.trim() ? iframeTitle : PAGE_TITLES[path] || "AllForOne SMP";
             }
 
-            // ── Ripple ───────────────────────────────────────────────────
             function spawnRipple(e) {
                 const r = document.createElement("div");
                 r.className = "ripple";
                 const size = 60;
-                // Use the button's own center when triggered via keyboard/
-                // synthetic events (no clientX/Y), rather than always
-                // falling back to viewport center.
                 let x, y;
                 if (e && typeof e.clientX === "number" && (e.clientX !== 0 || e.clientY !== 0)) {
                     x = e.clientX - size / 2;
@@ -1004,7 +951,6 @@
                 r.addEventListener("animationend", () => r.remove(), { once: true });
             }
 
-            // ── Frame creation ───────────────────────────────────────────
             function getOrCreateFrame(path) {
                 if (frames[path]) return frames[path];
 
@@ -1030,8 +976,6 @@
                     try {
                         iframe.contentWindow.postMessage({ type: "afo-pathname", pathname: path }, "*");
                     } catch (_) {}
-                    // Push the current theme into the frame as soon as it's ready,
-                    // so a freshly-loaded page matches whatever the shell is set to.
                     sendThemeToFrame(path);
                 });
 
@@ -1043,20 +987,13 @@
                 return frames[path];
             }
 
-            // ── Auto-refresh every 2 minutes (paused while tab hidden) ────
-            // Only runs for pages listed in AUTO_REFRESH_PATHS; every
-            // other page loads once and is left alone.
             function startRefreshTimer(path) {
                 if (refreshTimers[path]) clearInterval(refreshTimers[path]);
                 if (!AUTO_REFRESH_PATHS.includes(path)) return;
                 refreshTimers[path] = setInterval(() => {
-                    if (document.hidden) return; // don't thrash background tabs
+                    if (document.hidden) return;
                     const frame = frames[path];
                     if (!frame) return;
-                    // Only show the loading spinner for a refresh if this is
-                    // the page currently on screen — refreshing a hidden
-                    // frame shouldn't flash a loader nobody sees, but the
-                    // reload should still happen so it's fresh when visited.
                     if (path === currentPath) {
                         frame.iframe.style.opacity = "0";
                         frame.loader.classList.remove("hidden");
@@ -1078,10 +1015,8 @@
                     return;
                 }
                 spawnRipple(e);
-                bannerDismissed = false; // reset dismiss on navigation
+                bannerDismissed = false;
 
-                // Clear any pending cleanup from a previous rapid nav so
-                // slots don't get stuck mid-transition or removed early.
                 if (exitTimeout) {
                     clearTimeout(exitTimeout);
                     exitTimeout = null;
@@ -1098,9 +1033,6 @@
                 }
 
                 const frame = getOrCreateFrame(path);
-                // Force reflow before adding "visible" so the enter
-                // transition reliably fires even if the slot was just
-                // created and browsers coalesce back-to-back class changes.
                 void frame.slot.offsetWidth;
                 requestAnimationFrame(() => {
                     frame.slot.classList.add("visible");
@@ -1114,7 +1046,6 @@
                 applyBanner(path);
             };
 
-            // ── Drawer ───────────────────────────────────────────────────
             window.toggleDrawer = function () {
                 const open = drawer.classList.toggle("open");
                 hamburger.classList.toggle("open", open);
@@ -1133,9 +1064,6 @@
                 if (e.key === "Escape") closeDrawer();
             });
 
-            // Recompute banner height on resize/orientation change (text can reflow).
-            // Debounced so rapid resize events (e.g. dragging a window edge)
-            // don't spam layout reads.
             let resizeRAF = null;
             window.addEventListener("resize", () => {
                 if (!window._bannerConfig) return;
@@ -1146,10 +1074,6 @@
                 });
             });
 
-            // Pause background iframe refresh cycles cleanly when the tab
-            // becomes hidden/visible instead of relying only on the guard
-            // inside the interval callback — avoids a burst of "catch up"
-            // reloads firing the instant the tab regains focus.
             document.addEventListener("visibilitychange", () => {
                 if (!document.hidden && currentPath && frames[currentPath]) {
                     updateTitle(currentPath);
