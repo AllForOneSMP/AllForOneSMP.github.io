@@ -676,7 +676,7 @@
 
         <div id="notifBanner">
             <div class="banner-inner" id="bannerInner">
-                <span class="banner-text" id="bannerText"></span>
+                <span class="banner-text" id="bannerText">Backend server is offline, some features may not work right now.</span>
                 <a class="banner-btn" id="bannerBtn" href="#" target="_blank" rel="noopener" style="display: none"></a>
                 <button class="banner-close" id="bannerClose" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
             </div>
@@ -763,9 +763,11 @@
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const data = await res.json();
                         window._bannerConfig = data || null;
+                        if (window.reportBackendStatus) window.reportBackendStatus(true);
                         if (window.applyBanner) window.applyBanner(window._currentPath);
                     } catch (err) {
                         console.error("[banner] poll failed:", err);
+                        if (window.reportBackendStatus) window.reportBackendStatus(false);
                     }
                 }
 
@@ -794,7 +796,8 @@
             const REFRESH_INTERVAL = 2 * 60 * 1000;
             const EXIT_DURATION = 320;
 
-            const AUTO_REFRESH_PATHS = ["/", "/rules"];
+            // Only the rules page auto-refreshes in place while it's active.
+            const AUTO_REFRESH_PATHS = ["/rules"];
 
             const shell = document.getElementById("contentShell");
             const overlay = document.getElementById("rippleOverlay");
@@ -810,6 +813,7 @@
             let exitTimeout = null;
             let bannerDismissed = false;
             let bannerResizeObserver = null;
+            let backendOffline = false;
 
             window._currentPath = "/";
             window._bannerConfig = null;
@@ -844,7 +848,50 @@
                 if (b) b.checked = isDark;
             });
 
+            // Shown whenever the stats/banner backend can't be reached. Takes over the
+            // existing banner slot and ignores the remote-configured banner while offline.
+            function showOfflineBanner() {
+                const bannerText = document.getElementById("bannerText");
+                const bannerBtn = document.getElementById("bannerBtn");
+                const bannerClose = document.getElementById("bannerClose");
+
+                bannerInner.style.backgroundColor = "#d9534f";
+                bannerInner.style.color = "#ffffff";
+                bannerClose.style.color = "#ffffff";
+                bannerText.textContent = "Backend server is offline, some features may not work right now.";
+                bannerBtn.style.display = "none";
+
+                notifBanner.classList.add("visible");
+                requestAnimationFrame(() => {
+                    updateBannerHeight(bannerInner.offsetHeight);
+                });
+                observeBannerSize();
+            }
+
+            // Called by the polling script whenever a request to the backend succeeds or fails.
+            window.reportBackendStatus = function (isOnline) {
+                if (isOnline) {
+                    if (backendOffline) {
+                        backendOffline = false;
+                        applyBanner(window._currentPath);
+                    }
+                } else {
+                    if (!backendOffline) {
+                        backendOffline = true;
+                    }
+                    // Re-assert on every failed poll too, in case the user dismissed it
+                    // or navigated since the last time it was shown.
+                    showOfflineBanner();
+                }
+            };
+
             function applyBanner(path) {
+                // Offline state always wins over the remote-configured banner.
+                if (backendOffline) {
+                    showOfflineBanner();
+                    return;
+                }
+
                 const cfg = window._bannerConfig;
                 const bannerText = document.getElementById("bannerText");
                 const bannerBtn = document.getElementById("bannerBtn");
@@ -905,6 +952,8 @@
             }
 
             window.dismissBanner = function () {
+                // While the backend is offline, the alert re-asserts itself on the next
+                // poll (see reportBackendStatus) rather than staying dismissed.
                 bannerDismissed = true;
                 notifBanner.classList.remove("visible");
                 updateBannerHeight(0);
@@ -978,6 +1027,22 @@
                 return frames[path];
             }
 
+            // Removes a page's iframe entirely once you've navigated away from it, so the
+            // next visit to that path builds a brand-new iframe and refetches its content
+            // instead of showing the stale cached one.
+            function destroyFrame(path) {
+                const frame = frames[path];
+                if (!frame) return;
+                if (refreshTimers[path]) {
+                    clearInterval(refreshTimers[path]);
+                    delete refreshTimers[path];
+                }
+                if (frame.slot && frame.slot.parentNode) {
+                    frame.slot.parentNode.removeChild(frame.slot);
+                }
+                delete frames[path];
+            }
+
             function startRefreshTimer(path) {
                 if (refreshTimers[path]) clearInterval(refreshTimers[path]);
                 if (!AUTO_REFRESH_PATHS.includes(path)) return;
@@ -1014,12 +1079,16 @@
                 }
 
                 const outgoing = activeSlot;
+                const outgoingPath = currentPath;
                 if (outgoing) {
                     outgoing.classList.remove("visible");
                     outgoing.classList.add("exit");
                     exitTimeout = setTimeout(() => {
                         outgoing.classList.remove("exit");
                         exitTimeout = null;
+                        // Tear down the page we just left so it's rebuilt from scratch
+                        // (and refetched) the next time it's visited.
+                        destroyFrame(outgoingPath);
                     }, EXIT_DURATION);
                 }
 
