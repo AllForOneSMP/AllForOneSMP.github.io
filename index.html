@@ -372,7 +372,8 @@
             .banner-close {
                 position: absolute;
                 right: max(0.5rem, var(--safe-right));
-                top: 0.6rem;
+                top: 50%;
+                transform: translateY(-50%);
                 background: none;
                 border: none;
                 cursor: pointer;
@@ -381,6 +382,9 @@
                 padding: 0.4rem;
                 min-width: 32px;
                 min-height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 transition: opacity 0.2s var(--ease-standard);
             }
             .banner-close:hover {
@@ -412,6 +416,11 @@
                 max-height: 460px;
                 opacity: 1;
                 overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .drawer.open::-webkit-scrollbar {
+                display: none;
             }
             .drawer-links {
                 list-style: none;
@@ -474,6 +483,7 @@
             .frame-slot {
                 position: absolute;
                 inset: 0;
+                overflow: hidden;
                 opacity: 0;
                 transform: translateY(14px) scale(0.99);
                 transition:
@@ -498,7 +508,7 @@
                     transform 0.3s var(--ease-standard);
             }
             .frame-slot iframe {
-                width: 100%;
+                width: calc(100% + 20px);
                 height: 100%;
                 border: none;
                 display: block;
@@ -776,14 +786,14 @@
             })();
         </script>
         <script>
-            const BASE = "https://allforonesmp.github.io";
+            const BASE = "";
             const ROUTES = {
-                "/": BASE + "/main.html",
-                "/mods": BASE + "/mods",
-                "/rules": BASE + "/rules",
-                "/make-skin": BASE + "/make-skin",
-                "/admin": BASE + "/admin",
-                "/stats": BASE + "/stats"
+                "/": BASE + "main.html",
+                "/mods": BASE + "mods/index.html",
+                "/rules": BASE + "rules/index.html",
+                "/make-skin": BASE + "make-skin/index.html",
+                "/admin": BASE + "admin/index.html",
+                "/stats": BASE + "stats/index.html"
             };
             const PAGE_TITLES = {
                 "/": "AllForOne SMP",
