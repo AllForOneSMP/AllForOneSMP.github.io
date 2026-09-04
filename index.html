@@ -764,7 +764,7 @@
         <script>
             (function () {
                 "use strict";
-                const STATS_API_BASE = "https://desktop-nvjfv1m.tail1b131d.ts.net";
+                const STATS_API_BASE = "https://a1-backend.tail1b131d.ts.net";
                 const BANNER_POLL_MS = 15 * 1000;
 
                 async function pollBanner() {
@@ -857,7 +857,6 @@
                 if (a) a.checked = isDark;
                 if (b) b.checked = isDark;
             });
-
             // Shown whenever the stats/banner backend can't be reached. Takes over the
             // existing banner slot and ignores the remote-configured banner while offline.
             function showOfflineBanner() {
